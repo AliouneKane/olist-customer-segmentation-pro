@@ -1,0 +1,14 @@
+pandas
+sqlalchemy
+psycopg2-binary
+python-dotenv
+mlflow
+scikit-learn
+scipy
+matplotlib
+seaborn
+dash
+gunicorn
+pytest
+black
+pathlib
