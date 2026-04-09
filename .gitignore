@@ -1,0 +1,11 @@
+data/
+mlruns/
+claude.md
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.DS_Store
+.env
+venv/
+.venv/
+models/

@@ -1,0 +1,857 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
+import seaborn as sns
+import missingno as msno
+import plotly.express as px
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
+import warnings
+import sys
+import os
+from pathlib import Path
+from scipy.stats import shapiro, spearmanr
+
+warnings.filterwarnings('ignore')
+sns.set_theme(style="whitegrid", palette="muted")
+
+# Dictionnaire des 27 états brésiliens (abbr → nom complet)
+BRAZIL_STATES = {
+    'AC': 'Acre', 'AL': 'Alagoas', 'AP': 'Amapá', 'AM': 'Amazonas',
+    'BA': 'Bahia', 'CE': 'Ceará', 'DF': 'Distrito Federal', 'ES': 'Espírito Santo',
+    'GO': 'Goiás', 'MA': 'Maranhão', 'MT': 'Mato Grosso', 'MS': 'Mato Grosso do Sul',
+    'MG': 'Minas Gerais', 'PA': 'Pará', 'PB': 'Paraíba', 'PR': 'Paraná',
+    'PE': 'Pernambuco', 'PI': 'Piauí', 'RJ': 'Rio de Janeiro', 'RN': 'Rio Grande do Norte',
+    'RS': 'Rio Grande do Sul', 'RO': 'Rondônia', 'RR': 'Roraima', 'SC': 'Santa Catarina',
+    'SP': 'São Paulo', 'SE': 'Sergipe', 'TO': 'Tocantins'
+}
+
+# Macro-régions (pour encodage dans le clustering)
+STATE_REGION = {
+    'AC': 'Norte', 'AM': 'Norte', 'AP': 'Norte', 'PA': 'Norte',
+    'RO': 'Norte', 'RR': 'Norte', 'TO': 'Norte',
+    'AL': 'Nordeste', 'BA': 'Nordeste', 'CE': 'Nordeste', 'MA': 'Nordeste',
+    'PB': 'Nordeste', 'PE': 'Nordeste', 'PI': 'Nordeste', 'RN': 'Nordeste', 'SE': 'Nordeste',
+    'DF': 'Centro-Oeste', 'GO': 'Centro-Oeste', 'MS': 'Centro-Oeste', 'MT': 'Centro-Oeste',
+    'ES': 'Sudeste', 'MG': 'Sudeste', 'RJ': 'Sudeste', 'SP': 'Sudeste',
+    'PR': 'Sul', 'RS': 'Sul', 'SC': 'Sul'
+}
+
+# Setup project root and import data_loader
+PROJECT_ROOT = Path(os.getcwd()).parent
+sys.path.append(str(PROJECT_ROOT / "src"))
+from data_loader import get_db_engine, get_merged_dataframe, get_customer_aggregation
+
+engine = get_db_engine()
+
+tables = [
+    "olist_orders", "olist_customers", "olist_order_items",
+    "olist_products", "olist_sellers", "olist_order_payments",
+    "olist_order_reviews", "olist_geolocation", "product_category_name_translation"
+]
+db_data = {table: pd.read_sql_table(table, engine) for table in tables}
+
+print("✅ Tables chargées avec succès")
+print(f"   Couche SQL : PostgreSQL  |  Grain analytique : customer_unique_id\n")
+for t, df in db_data.items():
+    print(f"   {t:<45} {len(df):>8,} lignes  ×  {df.shape[1]:>2} colonnes")
+
+# --- Profiling de chaque table ---
+profiles = []
+for name, df in db_data.items():
+    missing_pct = round(df.isnull().sum().sum() / (df.shape[0] * df.shape[1]) * 100, 2)
+    profiles.append({
+        "Table": name,
+        "Lignes": len(df),
+        "Colonnes": len(df.columns),
+        "% Nulls": missing_pct,
+        "Doublons Exacts": df.duplicated().sum(),
+        "Statut": "⚠️ À surveiller" if missing_pct > 5 else "✅ OK"
+    })
+
+profile_df = pd.DataFrame(profiles).set_index("Table")
+display(profile_df.style.applymap(
+    lambda v: 'background-color: #fff3cd' if '⚠️' in str(v) else '',
+    subset=['Statut']
+))
+
+# --- Visualisation du % nulls par table (plus lisible qu'une heatmap pour une audience business) ---
+fig, ax = plt.subplots(figsize=(10, 4))
+colors = ['#e74c3c' if p > 5 else '#2ecc71' for p in profile_df['% Nulls']]
+ax.barh(profile_df.index, profile_df['% Nulls'], color=colors)
+ax.axvline(5, color='orange', linestyle='--', linewidth=1.5, label='Seuil 5% (à surveiller)')
+ax.set_xlabel("% de valeurs manquantes")
+ax.set_title("Complétude des tables — Vue d'ensemble")
+ax.legend()
+plt.tight_layout()
+plt.show()
+
+# Heatmap des valeurs manquantes (Tables critiques)
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 5))
+msno.matrix(db_data['olist_order_reviews'], ax=ax1, sparkline=False)
+ax1.set_title("Missings: order_reviews (Commentaires optionnels)")
+msno.matrix(db_data['olist_products'], ax=ax2, sparkline=False)
+ax2.set_title("Missings: products (Dimensions et catégories)")
+plt.tight_layout()
+plt.show()
+
+# Verification Status Commandes
+st_dist = db_data['olist_orders']['order_status'].value_counts(normalize=True) * 100
+print("Distribution order_status (%) :\n", st_dist)
+
+
+# Load merged data using SQL
+df_master = get_merged_dataframe(engine)
+
+# Temporal processing
+datetime_cols = ['order_purchase_timestamp', 'order_approved_at', 'order_delivered_carrier_date', 'order_delivered_customer_date', 'order_estimated_delivery_date']
+for col in datetime_cols:
+    df_master[col] = pd.to_datetime(df_master[col], errors='coerce')
+
+# Feature Engineering Temporel: Lead Time Decomposition
+df_master['actual_lead_time_days'] = (df_master['order_delivered_customer_date'] - df_master['order_purchase_timestamp']).dt.total_seconds() / 86400
+df_master['estimated_lead_time_days'] = (df_master['order_estimated_delivery_date'] - df_master['order_purchase_timestamp']).dt.total_seconds() / 86400
+df_master['approval_time_mins'] = (df_master['order_approved_at'] - df_master['order_purchase_timestamp']).dt.total_seconds() / 60
+df_master['carrier_time_days'] = (df_master['order_delivered_carrier_date'] - df_master['order_approved_at']).dt.total_seconds() / 86400
+df_master['transit_time_days'] = (df_master['order_delivered_customer_date'] - df_master['order_delivered_carrier_date']).dt.total_seconds() / 86400
+df_master['delivery_delay_days'] = df_master['actual_lead_time_days'] - df_master['estimated_lead_time_days']
+
+# Freight Ratio
+df_master['freight_ratio'] = df_master['freight_value'] / df_master['price']
+
+# Basic info on master df
+print(f"Master DF Shape: {df_master.shape}")
+display(df_master[['actual_lead_time_days', 'transit_time_days', 'delivery_delay_days', 'freight_ratio']].describe())
+
+
+# --- Panel 1 : Croissance mensuelle commandes + CA avec annotations ---
+df_orders = df_master[['order_id', 'order_purchase_timestamp']].drop_duplicates()
+monthly_orders = df_orders.set_index('order_purchase_timestamp').resample('ME').size()
+
+df_rev = df_master[['order_id', 'order_purchase_timestamp', 'payment_value']].drop_duplicates(subset=['order_id', 'payment_value'])
+monthly_revenue = df_rev.set_index('order_purchase_timestamp').resample('ME')['payment_value'].sum()
+
+# YoY growth : comparer Q4 2017 vs Q4 2016
+q4_2016 = monthly_orders['2016-10':'2016-12'].sum()
+q4_2017 = monthly_orders['2017-10':'2017-12'].sum()
+yoy_growth = (q4_2017 - q4_2016) / q4_2016 * 100 if q4_2016 > 0 else 0
+
+# Moyenne mobile 3 mois
+rolling_orders = monthly_orders.rolling(3).mean()
+
+fig, ax1 = plt.subplots(figsize=(15, 6))
+ax2 = ax1.twinx()
+
+# Fond grisé : phase de lancement Q4 2016
+ax1.axvspan(pd.Timestamp('2016-09-01'), pd.Timestamp('2016-12-31'),
+            alpha=0.08, color='gray', label='Phase lancement (Q4 2016)')
+
+ax1.fill_between(monthly_orders.index, monthly_orders.values, alpha=0.2, color='royalblue')
+ax1.plot(monthly_orders.index, monthly_orders.values, color='royalblue', marker='o', markersize=4, label='Commandes/mois')
+ax1.plot(rolling_orders.index, rolling_orders.values, color='navy', linestyle='--', linewidth=1.5, label='Moyenne mobile 3 mois')
+ax2.plot(monthly_revenue.index, monthly_revenue.values, color='#27ae60', marker='x', linestyle=':', linewidth=1.5, label='CA mensuel (BRL)')
+
+# Annotation Black Friday
+bf_date = pd.Timestamp('2017-11-30')
+if bf_date in monthly_orders.index:
+    bf_val = monthly_orders[bf_date]
+    ax1.annotate('Black Friday\n(pic national)', xy=(bf_date, bf_val),
+                 xytext=(bf_date - pd.DateOffset(months=3), bf_val + 500),
+                 arrowprops=dict(arrowstyle='->', color='black'),
+                 fontsize=9, color='black')
+
+ax1.set_ylabel("Volume de commandes", color='royalblue')
+ax2.set_ylabel("Chiffre d'Affaires (BRL)", color='#27ae60')
+ax1.set_title(f"Croissance Olist 2016–2018 | Croissance YoY (Q4 2016→2017) : +{yoy_growth:.0f}%", fontsize=13)
+
+lines1, labels1 = ax1.get_legend_handles_labels()
+lines2, labels2 = ax2.get_legend_handles_labels()
+ax1.legend(lines1 + lines2, labels1 + labels2, loc='upper left', fontsize=9)
+plt.tight_layout()
+plt.show()
+
+# --- Panel 2 : Acquisition de nouveaux clients (premier achat par mois) ---
+df_first_purchase = (
+    df_master[['customer_unique_id', 'order_purchase_timestamp']]
+    .sort_values('order_purchase_timestamp')
+    .drop_duplicates('customer_unique_id')
+    .set_index('order_purchase_timestamp')
+    .resample('ME')['customer_unique_id']
+    .count()
+)
+
+fig, ax = plt.subplots(figsize=(15, 4))
+ax.fill_between(df_first_purchase.index, df_first_purchase.values, alpha=0.4, color='coral')
+ax.plot(df_first_purchase.index, df_first_purchase.values, color='firebrick', linewidth=2)
+ax.set_title("Acquisition mensuelle de nouveaux clients (premier achat)", fontsize=13)
+ax.set_ylabel("Nouveaux clients uniques")
+ax.set_xlabel("Mois")
+# Annotation : si la courbe est en plateau = croissance par rétention possible en 2018
+ax.annotate('Plateau 2018\n→ saturation acquisition ?',
+            xy=(df_first_purchase.index[-3], df_first_purchase.iloc[-3]),
+            xytext=(df_first_purchase.index[-8], df_first_purchase.iloc[-3] + 800),
+            arrowprops=dict(arrowstyle='->', color='darkred'),
+            fontsize=9, color='darkred')
+plt.tight_layout()
+plt.show()
+
+# --- Panel 3 : Heatmap saisonnalité Jour × Heure ---
+df_master['dow'] = df_master['order_purchase_timestamp'].dt.day_name()
+df_master['hour'] = df_master['order_purchase_timestamp'].dt.hour
+order_days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+
+pivot = (
+    df_master.groupby(['dow', 'hour'])['order_id']
+    .nunique()
+    .unstack(fill_value=0)
+    .reindex(order_days)
+)
+
+fig, ax = plt.subplots(figsize=(16, 5))
+sns.heatmap(pivot, cmap='YlOrRd', ax=ax, linewidths=0.3, linecolor='white')
+ax.set_title("Saisonnalité des achats — Jour de la semaine × Heure de la journée", fontsize=13)
+ax.set_xlabel("Heure de la journée")
+ax.set_ylabel("")
+plt.tight_layout()
+plt.show()
+
+# --- Distribution des prix + percentiles clés ---
+prices = df_master['price'].dropna()
+p50, p75, p90, p95 = prices.quantile([0.5, 0.75, 0.9, 0.95])
+
+fig, axes = plt.subplots(1, 3, figsize=(18, 5))
+
+# Histogramme brut
+sns.histplot(prices.clip(upper=1000), bins=80, kde=True, ax=axes[0], color='teal')
+for p, label, c in [(p50, 'P50', 'blue'), (p75, 'P75', 'orange'), (p90, 'P90', 'red'), (p95, 'P95', 'darkred')]:
+    axes[0].axvline(p, color=c, linestyle='--', linewidth=1.2, label=f'{label}: R${p:.0f}')
+axes[0].set_title("Distribution des prix (clippée à 1000 BRL)")
+axes[0].legend(fontsize=8)
+axes[0].set_xlabel("Prix (BRL)")
+
+# Histogramme log-transformé
+sns.histplot(np.log1p(prices), bins=60, kde=True, ax=axes[1], color='steelblue')
+axes[1].set_title("Distribution Log(Prix+1) — nettement plus symétrique")
+axes[1].set_xlabel("log(Prix + 1)")
+
+# Boxplot outliers
+sns.boxplot(x=prices.clip(upper=1000), ax=axes[2], color='lightblue')
+axes[2].set_title("Boxplot — visualisation des outliers")
+axes[2].set_xlabel("Prix (BRL)")
+
+plt.suptitle("Distribution des Prix Produits — Olist 2016–2018", fontsize=14, y=1.02)
+plt.tight_layout()
+plt.show()
+
+# Test de normalité (Shapiro-Wilk sur échantillon)
+sample = prices.sample(5000, random_state=42)
+stat, p = shapiro(sample)
+print(f"Shapiro-Wilk sur 5 000 prix : stat={stat:.3f}, p={p:.3e}")
+print(f"Skewness : {prices.skew():.2f} | Kurtosis : {prices.kurtosis():.2f}")
+if p < 0.05:
+    print("→ Distribution non-normale confirmée. Log-transformation obligatoire avant K-Means / DBSCAN.")
+
+# --- Analyse des méthodes de paiement ---
+pay_raw = db_data['olist_order_payments']
+pay_counts = pay_raw['payment_type'].value_counts()
+pay_pct = pay_raw['payment_type'].value_counts(normalize=True) * 100
+
+fig, axes = plt.subplots(1, 3, figsize=(18, 5))
+
+# Donut chart
+wedge_props = {'linewidth': 2, 'edgecolor': 'white'}
+axes[0].pie(pay_counts, labels=pay_counts.index, autopct='%1.1f%%',
+            startangle=140, colors=sns.color_palette("Set2", len(pay_counts)),
+            wedgeprops=wedge_props, pctdistance=0.85)
+centre_circle = plt.Circle((0, 0), 0.65, color='white')
+axes[0].add_patch(centre_circle)
+axes[0].set_title("Répartition des méthodes de paiement")
+
+# Boxplot valeur par type de paiement
+pay_merged = df_master[['payment_type', 'payment_value']].dropna()
+order_types = pay_merged.groupby('payment_type')['payment_value'].median().sort_values(ascending=False).index
+sns.boxplot(data=pay_merged, x='payment_type', y='payment_value',
+            order=order_types, ax=axes[1], palette='Set2')
+axes[1].set_yscale('log')
+axes[1].set_title("Valeur de paiement par méthode (échelle log)")
+axes[1].set_xlabel("Méthode de paiement")
+axes[1].set_ylabel("Valeur (BRL, log)")
+
+# Distribution des échéances CB
+cc_installments = pay_raw[pay_raw['payment_type'] == 'credit_card']['payment_installments'].value_counts().sort_index().head(12)
+sns.barplot(x=cc_installments.index.astype(str), y=cc_installments.values, ax=axes[2], palette='Blues_d')
+axes[2].set_title("Nombre d'échéances — Cartes de crédit")
+axes[2].set_xlabel("Nombre d'échéances")
+axes[2].set_ylabel("Nb transactions")
+
+plt.suptitle("Comportement de Paiement — Méthodes, Valeurs & Étalement", fontsize=14, y=1.02)
+plt.tight_layout()
+plt.show()
+
+print(f"\nRépartition des paiements :")
+for ptype, pct in pay_pct.items():
+    print(f"  {ptype:<20} : {pct:.1f}%")
+
+# --- Agrégations état-niveau ---
+state_metrics = df_master.groupby('customer_state').agg(
+    order_count=('order_id', 'nunique'),
+    avg_ticket=('payment_value', 'mean'),
+    avg_freight_ratio=('freight_ratio', 'mean'),
+    avg_review_score=('review_score', 'mean'),
+    avg_lead_time=('actual_lead_time_days', 'mean')
+).reset_index()
+state_metrics['iso_alpha'] = 'BR-' + state_metrics['customer_state']
+state_metrics['freight_ratio_clipped'] = state_metrics['avg_freight_ratio'].clip(upper=1.5)
+
+# --- 4 cartes choroplèthes (2×2) ---
+metrics_to_plot = [
+    ('order_count', 'Volume de commandes par état client', 'Blues', False),
+    ('avg_ticket', 'Panier moyen par état client (BRL)', 'Greens', False),
+    ('freight_ratio_clipped', 'Ratio Fret/Prix moyen par état client', 'YlOrRd', False),
+    ('avg_review_score', 'Score de review moyen par état client', 'RdYlGn', False),
+]
+
+for col, title, cscale, _ in metrics_to_plot:
+    fig = px.choropleth(
+        state_metrics,
+        locations='iso_alpha',
+        locationmode='ISO-3166-2',
+        color=col,
+        scope='south america',
+        color_continuous_scale=cscale,
+        title=title,
+        labels={col: col.replace('_', ' ').title()},
+        hover_name='customer_state',
+        hover_data={'iso_alpha': False, col: ':.2f'}
+    )
+    fig.update_layout(
+        geo=dict(showframe=False, showcoastlines=True),
+        height=450, width=600,
+        margin=dict(l=0, r=0, t=40, b=0)
+    )
+    fig.show()
+
+# --- Heatmap flux Vendeur → Client (freight moyen) ---
+top_sell_states = df_master['seller_state'].value_counts().head(8).index.tolist()
+top_cust_states = df_master['customer_state'].value_counts().head(10).index.tolist()
+
+freight_flow = (
+    df_master.groupby(['seller_state', 'customer_state'])['freight_value']
+    .mean()
+    .unstack(fill_value=np.nan)
+)
+# Filtrer aux top états
+freight_sub = freight_flow.loc[
+    [s for s in top_sell_states if s in freight_flow.index],
+    [s for s in top_cust_states if s in freight_flow.columns]
+]
+
+fig, ax = plt.subplots(figsize=(12, 6))
+sns.heatmap(freight_sub, annot=True, fmt='.0f', cmap='YlOrRd', linewidths=0.4,
+            linecolor='white', ax=ax, annot_kws={"size": 9})
+ax.set_title("Fret moyen (BRL) : État Vendeur → État Client\n(Les cellules vides = flux inexistants dans les données)", fontsize=12)
+ax.set_xlabel("État Client")
+ax.set_ylabel("État Vendeur")
+plt.tight_layout()
+plt.show()
+
+# --- Stats synthèse ---
+print("\n📊 Synthèse géographique :")
+print(f"  Top 3 états clients  : {', '.join(df_master['customer_state'].value_counts().head(3).index.tolist())}")
+print(f"  Top 3 états vendeurs : {', '.join(df_master['seller_state'].value_counts().head(3).index.tolist())}")
+sp_pct = (df_master['seller_state'] == 'SP').mean() * 100
+print(f"  Concentration vendeurs SP : {sp_pct:.1f}% des lignes de commande")
+
+# --- Décomposition lead time par état (stacked bar horizontal) ---
+lead_by_state = df_master.groupby('customer_state').agg(
+    approval_days=('approval_time_mins', lambda x: x.median() / 1440),  # → jours
+    carrier_days=('carrier_time_days', 'median'),
+    transit_days=('transit_time_days', 'median'),
+    n_orders=('order_id', 'nunique')
+).dropna().reset_index()
+
+# Filtrer aux états avec suffisamment d'observations
+lead_by_state = lead_by_state[lead_by_state['n_orders'] >= 100].copy()
+lead_by_state['total'] = lead_by_state['approval_days'] + lead_by_state['carrier_days'] + lead_by_state['transit_days']
+lead_by_state = lead_by_state.sort_values('total', ascending=True)
+
+fig, ax = plt.subplots(figsize=(12, 9))
+colors = ['#3498db', '#e67e22', '#e74c3c']
+bottoms = np.zeros(len(lead_by_state))
+for col, label, color in zip(['approval_days', 'carrier_days', 'transit_days'],
+                               ['Approbation', 'Préparation (vendeur)', 'Transit (transporteur)'],
+                               colors):
+    ax.barh(lead_by_state['customer_state'], lead_by_state[col], left=bottoms,
+            color=color, label=label, alpha=0.85)
+    bottoms += lead_by_state[col].values
+
+ax.set_title("Décomposition du Lead Time Médian par État Client (jours)", fontsize=13)
+ax.set_xlabel("Jours (médiane)")
+ax.legend(loc='lower right', fontsize=10)
+ax.axvline(lead_by_state['total'].median(), color='black', linestyle='--', linewidth=1.2,
+           label='Médiane nationale')
+plt.tight_layout()
+plt.show()
+
+# --- Taux de commandes en retard par état ---
+df_master['is_late'] = df_master['delivery_delay_days'] > 0
+late_by_state = (
+    df_master.groupby('customer_state')['is_late']
+    .agg(['mean', 'count'])
+    .rename(columns={'mean': 'late_rate', 'count': 'n'})
+    .query('n >= 100')
+    .sort_values('late_rate', ascending=False)
+)
+late_by_state['late_pct'] = late_by_state['late_rate'] * 100
+
+fig, ax = plt.subplots(figsize=(12, 7))
+colors_late = ['#c0392b' if r > 0.15 else '#e67e22' if r > 0.08 else '#2ecc71'
+               for r in late_by_state['late_rate']]
+ax.barh(late_by_state.index, late_by_state['late_pct'], color=colors_late)
+ax.axvline(late_by_state['late_pct'].mean(), color='black', linestyle='--',
+           linewidth=1.5, label=f"Moyenne nationale ({late_by_state['late_pct'].mean():.1f}%)")
+ax.set_title("Taux de commandes livrées en retard par état client (%)", fontsize=13)
+ax.set_xlabel("% de commandes en retard")
+ax.legend(fontsize=10)
+
+# Légende des couleurs
+red_patch = mpatches.Patch(color='#c0392b', label='>15% (critique)')
+orange_patch = mpatches.Patch(color='#e67e22', label='8–15% (à surveiller)')
+green_patch = mpatches.Patch(color='#2ecc71', label='<8% (acceptable)')
+ax.legend(handles=[red_patch, orange_patch, green_patch, 
+                   plt.Line2D([0], [0], color='black', linestyle='--', label='Moyenne nationale')],
+          loc='lower right', fontsize=9)
+plt.tight_layout()
+plt.show()
+
+# --- Délai médian par bucket de retard ---
+print("\n📊 Statistiques clés sur les délais :")
+print(f"  Médiane lead time total    : {df_master['actual_lead_time_days'].median():.1f} jours")
+print(f"  Médiane transit time       : {df_master['transit_time_days'].median():.1f} jours")
+print(f"  Médiane approval time      : {df_master['approval_time_mins'].median()/60:.1f} heures")
+print(f"  Taux commandes en retard   : {df_master['is_late'].mean()*100:.1f}%")
+print(f"  Délai médian quand en retard : +{df_master.loc[df_master['is_late'], 'delivery_delay_days'].median():.1f} jours")
+
+# --- Top 15 catégories par volume ---
+top_cats = df_master['product_category_name_english'].value_counts().head(15)
+fig, ax = plt.subplots(figsize=(10, 6))
+sns.barplot(y=top_cats.index, x=top_cats.values, palette='crest', ax=ax)
+ax.set_title("Top 15 catégories par volume de ventes", fontsize=13)
+ax.set_xlabel("Nombre de lignes de commande")
+plt.tight_layout()
+plt.show()
+
+# --- Framework 6 tiers de catégories ---
+cat_stats = df_master.groupby('product_category_name_english').agg(
+    order_count=('order_id', 'nunique'),
+    avg_price=('price', 'mean'),
+    avg_review=('review_score', 'mean'),
+    avg_freight_ratio=('freight_ratio', 'mean')
+).reset_index().dropna()
+
+# Quintile → 6 tiers basés sur le volume
+cat_stats = cat_stats[cat_stats['order_count'] >= 10]  # exclure les catégories anecdotiques
+cat_stats['volume_tier'] = pd.qcut(
+    cat_stats['order_count'], q=6,
+    labels=['Niche', 'Émergente', 'Mainstream-bas', 'Mainstream', 'Populaire', 'Commodity']
+)
+
+# Scatter bubble : prix moyen vs review moyen, taille = volume, couleur = freight ratio
+fig, ax = plt.subplots(figsize=(13, 8))
+scatter = ax.scatter(
+    cat_stats['avg_price'],
+    cat_stats['avg_review'],
+    s=cat_stats['order_count'] / 30,
+    c=cat_stats['avg_freight_ratio'].clip(0, 1),
+    cmap='YlOrRd', alpha=0.65, edgecolors='grey', linewidths=0.3
+)
+
+# Annoter les top catégories (les plus grosses bulles)
+top_annotate = cat_stats.nlargest(8, 'order_count')
+for _, row in top_annotate.iterrows():
+    ax.annotate(row['product_category_name_english'],
+                (row['avg_price'], row['avg_review']),
+                fontsize=7.5, alpha=0.85, ha='center',
+                xytext=(0, 8), textcoords='offset points')
+
+plt.colorbar(scatter, ax=ax, label='Freight Ratio moyen')
+ax.set_title("Écosystème Catégories — Prix vs Satisfaction\n(Taille bulle = volume, couleur = charge de fret)", fontsize=12)
+ax.set_xlabel("Prix moyen (BRL)")
+ax.set_ylabel("Review score moyen")
+ax.axhline(df_master['review_score'].mean(), color='navy', linestyle='--', alpha=0.5, label=f"Score moyen national")
+ax.legend(fontsize=9)
+plt.tight_layout()
+plt.show()
+
+# Tableau synthèse par tier
+tier_summary = cat_stats.groupby('volume_tier', observed=True).agg(
+    nb_categories=('product_category_name_english', 'count'),
+    avg_price=('avg_price', 'mean'),
+    avg_review=('avg_review', 'mean'),
+    avg_freight_ratio=('avg_freight_ratio', 'mean')
+).round(2)
+print("\n📊 Synthèse par tier de catégorie :")
+display(tier_summary)
+
+# --- Concentration vendeurs (loi de puissance) ---
+seller_orders = df_master.groupby('seller_id')['order_id'].nunique().sort_values(ascending=False)
+cumsum_pct = seller_orders.cumsum() / seller_orders.sum() * 100
+seller_pct = np.arange(1, len(seller_orders)+1) / len(seller_orders) * 100
+
+fig, axes = plt.subplots(1, 2, figsize=(14, 5))
+
+# Distribution log scale
+axes[0].hist(seller_orders, bins=50, log=True, color='purple', alpha=0.7, edgecolor='white')
+axes[0].set_title("Distribution des ventes par vendeur (Log)")
+axes[0].set_xlabel("Nb commandes uniques")
+axes[0].set_ylabel("Nb vendeurs (log)")
+
+# Courbe de Lorenz approximative
+axes[1].plot(seller_pct, cumsum_pct.values, color='navy', linewidth=2)
+axes[1].plot([0, 100], [0, 100], 'k--', linewidth=1, alpha=0.4, label='Égalité parfaite')
+axes[1].fill_between(seller_pct, cumsum_pct.values, seller_pct, alpha=0.15, color='navy')
+axes[1].set_title("Courbe de Lorenz — Concentration des vendeurs")
+axes[1].set_xlabel("% de vendeurs (triés par volume)")
+axes[1].set_ylabel("% du volume cumulé")
+axes[1].legend(fontsize=9)
+
+# Afficher le "Pareto"
+top10_idx = int(len(seller_orders) * 0.1)
+top10_share = seller_orders.iloc[:top10_idx].sum() / seller_orders.sum() * 100
+axes[1].annotate(f"Top 10% vendeurs\n= {top10_share:.0f}% du volume",
+                 xy=(10, top10_share), xytext=(25, top10_share - 15),
+                 arrowprops=dict(arrowstyle='->', color='red'),
+                 fontsize=9, color='red')
+plt.tight_layout()
+plt.show()
+
+print(f"\n📊 Top 10% des vendeurs représentent {top10_share:.1f}% du volume total de commandes")
+
+# --- Distribution des scores (vue d'ensemble) ---
+fig, axes = plt.subplots(1, 2, figsize=(14, 5))
+score_counts = df_master['review_score'].value_counts().sort_index()
+colors_scores = ['#e74c3c', '#e67e22', '#f1c40f', '#2ecc71', '#27ae60']
+axes[0].bar(score_counts.index, score_counts.values, color=colors_scores, edgecolor='white', linewidth=1.5)
+axes[0].set_title("Distribution des review scores — Profil bimodal")
+axes[0].set_xlabel("Score (1–5 étoiles)")
+axes[0].set_ylabel("Nb reviews")
+# Annotation bimodalité
+axes[0].annotate('Pic insatisfaction\n(retards, problèmes)',
+                 xy=(1, score_counts[1]), xytext=(2, score_counts[1] * 0.7),
+                 arrowprops=dict(arrowstyle='->', color='red'), fontsize=9, color='red')
+axes[0].annotate('Pic satisfaction\n(majorité silencieuse heureuse)',
+                 xy=(5, score_counts[5]), xytext=(3.5, score_counts[5] * 0.85),
+                 arrowprops=dict(arrowstyle='->', color='green'), fontsize=9, color='green')
+
+# Corrélation Spearman
+df_delay = df_master[['delivery_delay_days', 'review_score']].dropna()
+stat, p_val = spearmanr(df_delay['delivery_delay_days'], df_delay['review_score'])
+sns.boxplot(x='review_score', y='delivery_delay_days', data=df_delay, palette='RdYlGn', ax=axes[1])
+axes[1].set_ylim(-30, 50)
+axes[1].axhline(0, color='black', linestyle='--', linewidth=1, alpha=0.7)
+axes[1].set_title(f"Délai de livraison par score\n(Spearman ρ={stat:.3f}, p={p_val:.1e})")
+axes[1].set_xlabel("Review score")
+axes[1].set_ylabel("Délai de livraison (jours, positif = retard)")
+plt.tight_layout()
+plt.show()
+
+# --- H1 : Delay buckets → score moyen ---
+df_master['delay_bucket'] = pd.cut(
+    df_master['delivery_delay_days'],
+    bins=[-np.inf, -3, 0, 3, 7, np.inf],
+    labels=['Avance >3j', 'À l\'heure', '1–3j retard', '3–7j retard', '>7j retard']
+)
+h1_data = df_master.groupby('delay_bucket', observed=True)['review_score'].agg(['mean', 'count']).reset_index()
+
+fig, ax = plt.subplots(figsize=(10, 5))
+colors_h1 = ['#27ae60', '#2ecc71', '#f39c12', '#e67e22', '#c0392b']
+bars = ax.bar(h1_data['delay_bucket'], h1_data['mean'], color=colors_h1, edgecolor='white', linewidth=1.5)
+for bar, cnt in zip(bars, h1_data['count']):
+    ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.03,
+            f'n={cnt:,}', ha='center', fontsize=8, color='gray')
+ax.set_ylim(1, 5.5)
+ax.set_title("H1 : Score moyen selon le bucket de retard de livraison", fontsize=13)
+ax.set_xlabel("Bucket de retard")
+ax.set_ylabel("Score moyen")
+ax.axhline(df_master['review_score'].mean(), color='black', linestyle='--', alpha=0.5, label='Score moyen global')
+ax.legend(fontsize=9)
+plt.tight_layout()
+plt.show()
+
+# --- H2 : Heatmap review score × état ---
+score_heatmap = pd.crosstab(
+    df_master['customer_state'],
+    df_master['review_score'],
+    normalize='index'
+) * 100
+# Trier par % de 5 étoiles décroissant
+score_heatmap = score_heatmap.sort_values(5, ascending=False)
+
+fig, ax = plt.subplots(figsize=(10, 11))
+sns.heatmap(score_heatmap, cmap='RdYlGn', annot=True, fmt='.0f',
+            linewidths=0.3, linecolor='white', ax=ax,
+            vmin=0, vmax=60, annot_kws={"size": 8})
+ax.set_title("H2 : Répartition des scores (%) par état client\n(Trié par % de 5 étoiles décroissant)", fontsize=12)
+ax.set_xlabel("Review score")
+plt.tight_layout()
+plt.show()
+
+# --- H3 : Top/Bottom catégories par % 1 étoile ---
+cat_scores = df_master.groupby('product_category_name_english').apply(
+    lambda x: pd.Series({
+        'pct_5star': (x['review_score'] == 5).mean() * 100,
+        'pct_1star': (x['review_score'] == 1).mean() * 100,
+        'n': len(x)
+    })
+).reset_index().query('n >= 300').dropna()
+
+fig, axes = plt.subplots(1, 2, figsize=(16, 6))
+top5_worst = cat_scores.nlargest(10, 'pct_1star')
+top5_best = cat_scores.nlargest(10, 'pct_5star')
+
+sns.barplot(data=top5_worst, x='pct_1star', y='product_category_name_english',
+            ax=axes[0], palette='Reds_r')
+axes[0].set_title("H3 : Top 10 catégories — % d'avis 1 étoile (pires)", fontsize=11)
+axes[0].set_xlabel("% de reviews 1 étoile")
+
+sns.barplot(data=top5_best, x='pct_5star', y='product_category_name_english',
+            ax=axes[1], palette='Greens')
+axes[1].set_title("H3 : Top 10 catégories — % d'avis 5 étoiles (meilleures)", fontsize=11)
+axes[1].set_xlabel("% de reviews 5 étoiles")
+plt.tight_layout()
+plt.show()
+
+late_pct = df_master['is_late'].mean() * 100
+print(f"\n📊 Taux global de commandes en retard : {late_pct:.1f}%")
+
+# Clipper les outliers extrêmes (fret gratuit → ratio 0, erreurs → ratio >2)
+fr = df_master['freight_ratio'].clip(0, 2).dropna()
+
+fig, axes = plt.subplots(1, 3, figsize=(18, 5))
+
+# --- Distribution avec seuil de friction ---
+sns.histplot(fr, bins=100, kde=True, ax=axes[0], color='coral')
+axes[0].axvline(0.30, color='red', linestyle='--', linewidth=2, label='Seuil friction 30%')
+axes[0].axvline(fr.median(), color='navy', linestyle=':', linewidth=1.5, label=f'Médiane ({fr.median():.2f})')
+axes[0].set_title("Distribution du Freight Ratio\n(freight_value / price)")
+axes[0].set_xlabel("Freight Ratio (clippé à 2.0)")
+axes[0].legend(fontsize=9)
+pct_above_30 = (df_master['freight_ratio'].dropna() > 0.30).mean() * 100
+axes[0].annotate(f'{pct_above_30:.1f}% des commandes\nau-dessus du seuil',
+                 xy=(0.30, axes[0].get_ylim()[1]*0.7),
+                 xytext=(0.6, axes[0].get_ylim()[1]*0.85),
+                 arrowprops=dict(arrowstyle='->', color='red'),
+                 fontsize=9, color='red')
+
+# --- Freight ratio par état (top 15) ---
+fr_by_state = df_master.groupby('customer_state')['freight_ratio'].median().sort_values(ascending=False).head(15)
+colors_fr = ['#c0392b' if v > 0.30 else '#e67e22' if v > 0.20 else '#27ae60' for v in fr_by_state.values]
+axes[1].barh(fr_by_state.index, fr_by_state.values, color=colors_fr)
+axes[1].axvline(0.30, color='red', linestyle='--', linewidth=1.5)
+axes[1].set_title("Freight Ratio médian par état client\n(Top 15 états)")
+axes[1].set_xlabel("Freight Ratio médian")
+
+# --- Hexbin Freight Ratio vs Review Score ---
+valid = df_master[['freight_ratio', 'review_score']].dropna()
+valid = valid[valid['freight_ratio'].between(0, 1.5)]
+hb = axes[2].hexbin(valid['freight_ratio'], valid['review_score'],
+                     gridsize=30, cmap='YlOrRd', mincnt=5)
+plt.colorbar(hb, ax=axes[2], label='Nb commandes')
+axes[2].axvline(0.30, color='red', linestyle='--', linewidth=1.5, label='Seuil 30%')
+axes[2].set_title("Freight Ratio vs Review Score\n(densité hexagonale)")
+axes[2].set_xlabel("Freight Ratio")
+axes[2].set_ylabel("Review Score")
+axes[2].legend(fontsize=9)
+
+plt.suptitle("Freight Ratio — Distribution, Géographie & Impact sur la Satisfaction", fontsize=13, y=1.02)
+plt.tight_layout()
+plt.show()
+
+# --- Freight ratio par décile de poids produit ---
+df_master['weight_decile'] = pd.qcut(
+    df_master['product_weight_g'].fillna(df_master['product_weight_g'].median()),
+    q=10, labels=False, duplicates='drop'
+)
+fr_by_weight = df_master.groupby('weight_decile')['freight_ratio'].mean()
+
+fig, ax = plt.subplots(figsize=(10, 4))
+ax.plot(fr_by_weight.index, fr_by_weight.values, marker='o', color='firebrick', linewidth=2)
+ax.fill_between(fr_by_weight.index, fr_by_weight.values, alpha=0.15, color='firebrick')
+ax.axhline(0.30, color='red', linestyle='--', linewidth=1.5, label='Seuil friction 30%')
+ax.set_title("Freight Ratio moyen par décile de poids produit\n(D1 = produits légers, D10 = produits lourds)", fontsize=12)
+ax.set_xlabel("Décile de poids (croissant)")
+ax.set_ylabel("Freight Ratio moyen")
+ax.legend(fontsize=9)
+plt.tight_layout()
+plt.show()
+
+# Corrélation freight ratio vs review score (en contrôlant les outliers)
+clean = df_master[['freight_ratio', 'review_score']].dropna()
+clean = clean[clean['freight_ratio'].between(0, 2)]
+rho_fr, p_fr = spearmanr(clean['freight_ratio'], clean['review_score'])
+print(f"Corrélation Spearman (Freight Ratio vs Review Score) : ρ={rho_fr:.3f}, p={p_fr:.3e}")
+print(f"→ {'Corrélation négative significative' if rho_fr < -0.05 and p_fr < 0.05 else 'Corrélation faible ou non significative'}")
+print(f"\n% commandes avec freight_ratio > 30% : {pct_above_30:.1f}%")
+
+# --- Construction RFM depuis l'agrégation SQL ---
+df_agg = get_customer_aggregation(engine)
+max_date = pd.to_datetime(df_agg['last_purchase_date']).max()
+
+df_agg['Recency'] = (max_date - pd.to_datetime(df_agg['last_purchase_date'])).dt.days
+df_rfm = df_agg[['customer_unique_id', 'Recency', 'total_orders', 'total_spent']].copy()
+df_rfm.columns = ['customer_unique_id', 'Recency', 'Frequency', 'Monetary']
+
+df_rfm['Recency_log'] = np.log1p(df_rfm['Recency'])
+df_rfm['Monetary_log'] = np.log1p(df_rfm['Monetary'])
+
+# --- Analyse de la dominance F=1 ---
+freq_dist = df_rfm['Frequency'].value_counts().sort_index()
+one_shot_pct = (df_rfm['Frequency'] == 1).mean() * 100
+repeat_pct = (df_rfm['Frequency'] >= 2).mean() * 100
+
+print(f"{'='*50}")
+print(f"  Clients avec exactement 1 commande : {one_shot_pct:.1f}%")
+print(f"  Clients avec 2+ commandes          : {repeat_pct:.1f}%")
+print(f"  Clients avec 3+ commandes          : {(df_rfm['Frequency'] >= 3).mean()*100:.1f}%")
+print(f"{'='*50}")
+
+fig, axes = plt.subplots(1, 2, figsize=(14, 5))
+# Distribution fréquence 1–10
+freq_1_10 = freq_dist[freq_dist.index <= 10]
+axes[0].bar(freq_1_10.index, freq_1_10.values, color='steelblue', edgecolor='white')
+axes[0].set_title(f"Distribution de la Fréquence d'achat\n({one_shot_pct:.1f}% des clients ont F=1)")
+axes[0].set_xlabel("Nombre de commandes")
+axes[0].set_ylabel("Nb clients")
+axes[0].annotate(f"{one_shot_pct:.1f}% ici",
+                 xy=(1, freq_1_10[1]), xytext=(3, freq_1_10[1] * 0.7),
+                 arrowprops=dict(arrowstyle='->', color='red'),
+                 fontsize=10, color='red', fontweight='bold')
+
+# Distributions R brut vs log
+axes[1].hist(df_rfm['Recency'], bins=60, color='coral', alpha=0.6, label='Recency brute', density=True)
+ax_twin = axes[1].twinx()
+ax_twin.hist(df_rfm['Recency_log'], bins=60, color='navy', alpha=0.4, label='log(Recency+1)', density=True)
+axes[1].set_title("Recency : brute vs log-transformée")
+axes[1].set_xlabel("Jours / log(jours+1)")
+axes[1].legend(loc='upper left', fontsize=9)
+ax_twin.legend(loc='upper right', fontsize=9)
+plt.tight_layout()
+plt.show()
+
+# --- Distributions R, F, M brut + log ---
+fig, axes = plt.subplots(2, 3, figsize=(16, 9))
+feat = ['Recency', 'Frequency', 'Monetary']
+for i, f in enumerate(feat):
+    sns.histplot(df_rfm[f], bins=50, ax=axes[0, i], color=['coral', 'steelblue', 'mediumseagreen'][i])
+    axes[0, i].set_title(f"{f} — Distribution brute\nSkewness: {df_rfm[f].skew():.2f}")
+
+sns.histplot(df_rfm['Recency_log'], bins=50, ax=axes[1, 0], color='coral')
+axes[1, 0].set_title("log(Recency+1)")
+axes[1, 1].axis('off')
+axes[1, 1].text(0.5, 0.5,
+    f"Frequency : {one_shot_pct:.1f}% des clients\nont F=1.\n\nLa log-transformation\nsur F n'apporte rien\n(quasi-binaire).",
+    ha='center', va='center', fontsize=11, transform=axes[1, 1].transAxes,
+    bbox=dict(boxstyle='round', facecolor='#fff3cd', alpha=0.8))
+sns.histplot(df_rfm['Monetary_log'], bins=50, ax=axes[1, 2], color='mediumseagreen')
+axes[1, 2].set_title("log(Monetary+1)")
+plt.suptitle("Distributions RFM — Brutes vs Log-transformées", fontsize=13)
+plt.tight_layout()
+plt.show()
+
+# --- Scatter plots 2D pour visualiser les corrélations ---
+fig, axes = plt.subplots(1, 3, figsize=(18, 5))
+pairs = [('Recency_log', 'Monetary_log'), ('Recency_log', 'Frequency'), ('Monetary_log', 'Frequency')]
+labels = [('log(Recency)', 'log(Monetary)'), ('log(Recency)', 'Frequency'), ('log(Monetary)', 'Frequency')]
+for ax, (x, y), (xl, yl) in zip(axes, pairs, labels):
+    ax.scatter(df_rfm[x], df_rfm[y], alpha=0.04, s=2, color='royalblue')
+    ax.set_xlabel(xl)
+    ax.set_ylabel(yl)
+    rho, _ = spearmanr(df_rfm[x], df_rfm[y])
+    ax.set_title(f"{xl} vs {yl}\nρ = {rho:.3f}")
+plt.suptitle("Corrélations 2D dans l'espace RFM", fontsize=13)
+plt.tight_layout()
+plt.show()
+
+# --- Profil comparatif : clients fidèles (F≥2) vs one-timers ---
+loyal = df_rfm[df_rfm['Frequency'] >= 2]
+onetime = df_rfm[df_rfm['Frequency'] == 1]
+
+comparison = pd.DataFrame({
+    'Clients Fidèles (F≥2)': loyal[['Recency', 'Frequency', 'Monetary']].median(),
+    'One-Timers (F=1)': onetime[['Recency', 'Frequency', 'Monetary']].median()
+})
+print("\n📊 Profil médian comparatif :")
+display(comparison.style.highlight_max(axis=1, color='#d4edda').highlight_min(axis=1, color='#f8d7da'))
+
+# Lifespan pour les clients fidèles
+if 'first_purchase_date' in df_agg.columns:
+    df_agg['customer_lifespan_days'] = (
+        pd.to_datetime(df_agg['last_purchase_date']) - pd.to_datetime(df_agg['first_purchase_date'])
+    ).dt.days
+    loyal_lifespan = df_agg[df_agg['total_orders'] >= 2]['customer_lifespan_days'].dropna()
+    if len(loyal_lifespan) > 0:
+        fig, ax = plt.subplots(figsize=(10, 4))
+        sns.histplot(loyal_lifespan, bins=40, color='purple', ax=ax)
+        ax.axvline(loyal_lifespan.median(), color='red', linestyle='--',
+                   label=f"Médiane : {loyal_lifespan.median():.0f} jours")
+        ax.set_title(f"Durée de vie des clients fidèles (F≥2) — n={len(loyal_lifespan):,}")
+        ax.set_xlabel("Jours entre premier et dernier achat")
+        ax.legend(fontsize=9)
+        plt.tight_layout()
+        plt.show()
+
+print(f"\n📊 Matrice de corrélation RFM :")
+display(df_rfm[['Recency', 'Frequency', 'Monetary']].corr().round(3))
+
+import pandas as pd
+
+hypotheses = pd.DataFrame([
+    {
+        'ID': 'H1',
+        'Hypothèse': 'Les high-spenders (Monetary élevé) sont des acheteurs infrequents de produits spécialisés',
+        'Evidence EDA': 'Scatter M vs F — corrélation faible, outliers M avec F=1 (S11)',
+        'Features Candidates': 'log_Monetary, category_tier, avg_installments',
+        'Shape Cluster Attendue': '~5% des clients — cluster "Gros acheteurs ponctuels"'
+    },
+    {
+        'ID': 'H2',
+        'Hypothèse': 'Les clients inactifs depuis >300 jours sont en churn effectif',
+        'Evidence EDA': 'Spike Recency 400–600 jours = cohorte post-2017 non revenue (S11)',
+        'Features Candidates': 'log_Recency, is_one_timer_flag',
+        'Shape Cluster Attendue': 'Grand cluster dormant (~40% des clients)'
+    },
+    {
+        'ID': 'H3',
+        'Hypothèse': 'La localisation géographique prédit le freight burden et la satisfaction',
+        'Evidence EDA': 'Cartes choroplèthes : Nord/NE = freight ratio 2–3x SP (S6), corrélation géo vs score (S9)',
+        'Features Candidates': 'customer_region_encoded, avg_freight_ratio',
+        'Shape Cluster Attendue': 'Dimension transversale — split géographique dans plusieurs clusters'
+    },
+    {
+        'ID': 'H4',
+        'Hypothèse': 'Le mode de paiement boleto segmente par accès financier, pas par préférence',
+        'Evidence EDA': 'Boleto = Monetary médian plus faible, pas de crédit (S5)',
+        'Features Candidates': 'payment_type_credit_card_flag, avg_installments',
+        'Shape Cluster Attendue': '1 cluster "accès limité au crédit" = low-M, high-freight'
+    },
+    {
+        'ID': 'H5',
+        'Hypothèse': 'La tolérance au délai varie par catégorie d\'achat',
+        'Evidence EDA': 'H3 satisfaction : catégories lourdes = pires scores même à délai équivalent (S9)',
+        'Features Candidates': 'avg_delivery_delay, main_category_tier',
+        'Shape Cluster Attendue': 'Dimension comportementale — modère les autres clusters'
+    },
+    {
+        'ID': 'H6',
+        'Hypothèse': 'Les clients fidèles (F≥2) forment un cluster distinct avec RFM supérieur',
+        'Evidence EDA': 'Profil médian F≥2 : Monetary +50%, Recency plus faible (S11)',
+        'Features Candidates': 'Frequency, customer_lifespan_days, log_Monetary',
+        'Shape Cluster Attendue': '1 cluster "rétention-priorité" (~3–5% des clients)'
+    }
+])
+
+display(hypotheses.set_index('ID').style
+    .set_properties(**{'text-align': 'left', 'white-space': 'pre-wrap', 'max-width': '250px'})
+    .set_table_styles([{'selector': 'th', 'props': [('text-align', 'left'), ('background-color', '#2c3e50'), ('color', 'white')]}])
+)
