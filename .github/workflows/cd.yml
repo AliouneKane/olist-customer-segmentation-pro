@@ -1,0 +1,64 @@
+name: CD — Build & Deploy to Cloud Run
+
+on:
+  push:
+    branches: [main]
+
+env:
+  REGION: europe-west1
+  SERVICE: olist-segmentation
+  REGISTRY: europe-west1-docker.pkg.dev
+
+jobs:
+  deploy:
+    name: Docker Build → Artifact Registry → Cloud Run
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write  # Required for Workload Identity Federation
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_CREDENTIALS }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker ${{ env.REGISTRY }} --quiet
+
+      - name: Build Docker image
+        run: |
+          docker build \
+            -t ${{ env.REGISTRY }}/${{ secrets.GCP_PROJECT_ID }}/olist/${{ env.SERVICE }}:${{ github.sha }} \
+            -t ${{ env.REGISTRY }}/${{ secrets.GCP_PROJECT_ID }}/olist/${{ env.SERVICE }}:latest \
+            .
+
+      - name: Push Docker image
+        run: |
+          docker push ${{ env.REGISTRY }}/${{ secrets.GCP_PROJECT_ID }}/olist/${{ env.SERVICE }}:${{ github.sha }}
+          docker push ${{ env.REGISTRY }}/${{ secrets.GCP_PROJECT_ID }}/olist/${{ env.SERVICE }}:latest
+
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy ${{ env.SERVICE }} \
+            --image ${{ env.REGISTRY }}/${{ secrets.GCP_PROJECT_ID }}/olist/${{ env.SERVICE }}:${{ github.sha }} \
+            --region ${{ env.REGION }} \
+            --platform managed \
+            --allow-unauthenticated \
+            --memory 1Gi \
+            --cpu 1 \
+            --min-instances 0 \
+            --max-instances 3 \
+            --port 8080
+
+      - name: Show deployed service URL
+        run: |
+          gcloud run services describe ${{ env.SERVICE }} \
+            --region ${{ env.REGION }} \
+            --format "value(status.url)"
