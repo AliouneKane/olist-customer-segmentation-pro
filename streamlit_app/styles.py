@@ -14,7 +14,7 @@ from __future__ import annotations
 import plotly.graph_objects as go
 import streamlit as st
 
-# ── Brand palette ─────────────────────────────────────────────────────────────
+# Brand palette
 
 OLIST_BLUE = "#0041FF"
 OLIST_YELLOW = "#F0FF00"
@@ -34,7 +34,7 @@ SEGMENT_COLORS = [
     "#ef4444",  # 5 — red
 ]
 
-# ── CSS ───────────────────────────────────────────────────────────────────────
+# CSS injected into every page
 
 _CSS = """
 /* ── Hide Streamlit chrome ─────────────────────────────────────── */
@@ -192,7 +192,7 @@ def inject_css() -> None:
     st.markdown(f"<style>{_CSS}</style>", unsafe_allow_html=True)
 
 
-# ── Plotly light theme ────────────────────────────────────────────────────────
+# Plotly theme
 
 
 def apply_olist_theme(fig: go.Figure, height: int | None = None) -> go.Figure:

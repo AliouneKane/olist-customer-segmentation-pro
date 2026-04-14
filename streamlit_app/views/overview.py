@@ -51,9 +51,7 @@ def render() -> None:
         st.error(str(exc))
         return
 
-    # ══════════════════════════════════════════════════════════════════════
     # 1. STORYTELLING — Contexte métier (avant tout graphique)
-    # ══════════════════════════════════════════════════════════════════════
     st.markdown(
         f"""
         <div style="background:linear-gradient(135deg, {OLIST_BLUE} 0%, #0033cc 100%);
@@ -89,7 +87,7 @@ def render() -> None:
         unsafe_allow_html=True,
     )
 
-    # ── 3 messages-clés ────────────────────────────────────────────────────────
+    # 3 messages-clés
     st.markdown(
         "<h3 style='color:#374151; font-size:1rem; font-weight:700;"
         " margin-bottom:0.75rem;'>💡 Ce que révèle la segmentation</h3>",
@@ -126,9 +124,7 @@ def render() -> None:
 
     st.markdown("<div style='margin-top:1.5rem;'></div>", unsafe_allow_html=True)
 
-    # ══════════════════════════════════════════════════════════════════════
     # 2. KPIs GLOBAUX
-    # ══════════════════════════════════════════════════════════════════════
     st.markdown(
         f"<h3 style='color:{OLIST_BLUE}; margin-bottom:0.75rem;'>"
         "Indicateurs Globaux</h3>",
@@ -137,9 +133,7 @@ def render() -> None:
     render_global_kpi_row(profile_df)
     st.markdown("<div style='margin-top:1.5rem;'></div>", unsafe_allow_html=True)
 
-    # ══════════════════════════════════════════════════════════════════════
     # 3. DISTRIBUTION + HEATMAP
-    # ══════════════════════════════════════════════════════════════════════
     st.markdown(
         f"<h3 style='color:{OLIST_BLUE}; margin-bottom:0.3rem;'>"
         "Répartition de la Base Client</h3>"
@@ -162,9 +156,7 @@ def render() -> None:
 
     st.divider()
 
-    # ══════════════════════════════════════════════════════════════════════
     # 4. COMPARAISONS PAR MÉTRIQUE
-    # ══════════════════════════════════════════════════════════════════════
     st.markdown(
         f"<h3 style='color:{OLIST_BLUE}; margin-bottom:0.3rem;'>"
         "Comparaison par Métrique</h3>"
@@ -198,7 +190,7 @@ def render() -> None:
             apply_olist_theme(fig, height=320)
             st.plotly_chart(fig, use_container_width=True)
 
-    # ── Données brutes ────────────────────────────────────────────────────────
+    # Données brutes
     with st.expander("📄 VOIR LE TABLEAU COMPLET DES PROFILS"):
         cols_filter = st.multiselect(
             "Colonnes :",

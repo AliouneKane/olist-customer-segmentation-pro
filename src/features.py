@@ -1,13 +1,4 @@
-"""Feature engineering module for Olist customer segmentation.
-
-Provides functions to build the customer feature store from PostgreSQL,
-apply log-transformations, and normalize features with StandardScaler.
-
-All functions follow production conventions:
-- Type hints on all parameters and return values
-- Google-style docstrings
-- No side effects — pure transformations returning new DataFrames
-"""
+"""Build RFM + behavioral features from the Olist PostgreSQL database."""
 
 from __future__ import annotations
 
@@ -22,7 +13,7 @@ from sqlalchemy import Engine
 
 logger = logging.getLogger(__name__)
 
-# ── Geographic encoding constants ────────────────────────────────────────────
+# State → macro-region mapping (used for logistics feature encoding)
 
 STATE_REGION: dict[str, str] = {
     "AC": "Norte",  "AM": "Norte",  "AP": "Norte",  "PA": "Norte",
@@ -36,7 +27,7 @@ STATE_REGION: dict[str, str] = {
     "PR": "Sul", "RS": "Sul", "SC": "Sul",
 }
 
-# Ordinal encoding: Sul (low freight) -> Norte (high freight)
+# Ordinal score: Sul (cheapest freight) → Norte (most expensive)
 REGION_FREIGHT_ORDER: dict[str, int] = {
     "Sul": 1, "Sudeste": 2, "Centro-Oeste": 3, "Nordeste": 4, "Norte": 5,
 }
@@ -62,41 +53,22 @@ OUTLIER_BOUNDS: dict[str, tuple[float | None, float | None]] = {
 
 
 def build_customer_features(engine: Engine) -> pd.DataFrame:
-    """Builds the customer-level feature store from PostgreSQL.
+    """Build the 9-feature customer store from PostgreSQL (one row per customer).
 
-    Constructs 9 behavioral and RFM features per customer by:
-    1. Fetching base RFM from get_customer_aggregation()
-    2. Computing logistics features (freight ratio, delivery delay) from
-       the merged order-item grain dataframe — with explicit deduplication
-       at (order_id, order_item_id) for item-level metrics and at order_id
-       for order-level metrics to avoid Cartesian-product inflation
-    3. Computing payment features (installments, CC flag) from order_payments
-    4. Encoding geographic features (region freight score)
-    5. Applying outlier clipping and median imputation
-
-    The output is raw (non-normalized). Pass it to scale_features() before
-    clustering.
-
-    Args:
-        engine: SQLAlchemy engine connected to the PostgreSQL instance.
-
-    Returns:
-        DataFrame with one row per customer_unique_id and columns:
-        customer_unique_id, Recency, Frequency, Monetary, Frequency_flag,
-        avg_freight_ratio, avg_delivery_delay, avg_review_score,
-        payment_type_cc_flag, avg_installments, region_freight_score,
-        customer_state, customer_region.
+    Joins orders, items, payments, reviews and geo data at customer_unique_id
+    level. Applies outlier clipping and median imputation. Returns raw
+    (non-scaled) values — call scale_features() before clustering.
     """
     from data_loader import get_customer_aggregation, get_merged_dataframe
 
     logger.info("Building customer feature store...")
 
-    # ── Load sources ──────────────────────────────────────────────────────────
+    # Load source tables
     df_agg    = get_customer_aggregation(engine)
     df_master = get_merged_dataframe(engine)
     pay_raw   = pd.read_sql_table("olist_order_payments", engine)
 
-    # ── Temporal columns ──────────────────────────────────────────────────────
+    # Parse datetime columns and compute delivery timing
     _datetime_cols = [
         "order_purchase_timestamp", "order_approved_at",
         "order_delivered_carrier_date", "order_delivered_customer_date",
@@ -121,8 +93,7 @@ def build_customer_features(engine: Engine) -> pd.DataFrame:
     df_master["freight_ratio"] = df_master["freight_value"] / df_master["price"]
     df_master["is_late"]       = (df_master["delivery_delay_days"] > 0).astype(int)
 
-    # ── Logistics features ────────────────────────────────────────────────────
-    # Item-level dedup for freight ratio (avoid payment JOIN duplication)
+    # Logistics — deduplicate at item level for freight, order level for delay
     df_items  = df_master.drop_duplicates(subset=["order_id", "order_item_id"])
     df_orders = df_master.drop_duplicates(subset=["order_id"])
 
@@ -137,7 +108,7 @@ def build_customer_features(engine: Engine) -> pd.DataFrame:
         customer_freight, on="customer_unique_id", how="left"
     )
 
-    # ── Payment features ──────────────────────────────────────────────────────
+    # Payment — dominant payment type + average installments per customer
     orders_map   = df_master[["order_id", "customer_unique_id"]].drop_duplicates("order_id")
     pay_enriched = pay_raw.merge(orders_map, on="order_id", how="inner")
 
@@ -164,7 +135,7 @@ def build_customer_features(engine: Engine) -> pd.DataFrame:
         customer_payments["dominant_payment_type"] == "credit_card"
     ).astype(int)
 
-    # ── Geographic features ───────────────────────────────────────────────────
+    # Geography — most frequent state per customer → region freight score
     customer_geo = (
         df_orders
         .groupby("customer_unique_id")["customer_state"]
@@ -176,7 +147,7 @@ def build_customer_features(engine: Engine) -> pd.DataFrame:
         REGION_FREIGHT_ORDER
     )
 
-    # ── Assembly ──────────────────────────────────────────────────────────────
+    # Assemble all feature groups
     df_features = df_agg.copy()
     for df_extra in [
         customer_logistics[["customer_unique_id", "avg_freight_ratio", "avg_delivery_delay"]],
@@ -188,7 +159,7 @@ def build_customer_features(engine: Engine) -> pd.DataFrame:
         df_features = df_features.merge(df_extra, on="customer_unique_id", how="left")
         assert len(df_features) == n_before, "Merge created duplicate rows — check keys."
 
-    # ── RFM base ──────────────────────────────────────────────────────────────
+    # RFM columns
     max_date = pd.to_datetime(df_features["last_purchase_date"]).max()
     df_features["Recency"]        = (
         max_date - pd.to_datetime(df_features["last_purchase_date"])
@@ -197,13 +168,13 @@ def build_customer_features(engine: Engine) -> pd.DataFrame:
     df_features["Monetary"]       = df_features["total_spent"]
     df_features["Frequency_flag"] = (df_features["Frequency"] >= 2).astype(int)
 
-    # ── Outlier clipping ──────────────────────────────────────────────────────
+    # Clip outliers
     p99_monetary = df_features["Monetary"].quantile(0.99)
     df_features["Monetary"] = df_features["Monetary"].clip(upper=p99_monetary)
     for col, (lo, hi) in OUTLIER_BOUNDS.items():
         df_features[col] = df_features[col].clip(lower=lo, upper=hi)
 
-    # ── Imputation ────────────────────────────────────────────────────────────
+    # Impute remaining nulls with sensible defaults
     imputation_map: dict[str, float] = {
         "avg_freight_ratio":    df_features["avg_freight_ratio"].median(),
         "avg_delivery_delay":   0.0,
@@ -232,21 +203,9 @@ def apply_log_transforms(
     df: pd.DataFrame,
     cols: list[str] | None = None,
 ) -> pd.DataFrame:
-    """Applies log1p transformation to specified columns.
+    """Add Log_{col} = log1p(col) columns to df. Original columns untouched.
 
-    Creates new columns named ``Log_{col}`` for each column in ``cols``.
-    The original columns are preserved unchanged.
-
-    Args:
-        df: Input DataFrame.
-        cols: List of column names to transform. Defaults to
-            ['Recency', 'Monetary'].
-
-    Returns:
-        DataFrame with additional ``Log_{col}`` columns appended.
-
-    Raises:
-        KeyError: If any column in ``cols`` is not present in ``df``.
+    Defaults to ['Recency', 'Monetary']. Raises KeyError for missing columns.
     """
     if cols is None:
         cols = ["Recency", "Monetary"]
@@ -266,28 +225,11 @@ def scale_features(
     feature_cols: list[str] | None = None,
     scaler_path: Path | None = None,
 ) -> tuple[pd.DataFrame, StandardScaler]:
-    """Applies StandardScaler to selected feature columns.
+    """StandardScale feature_cols and return (scaled_df, scaler).
 
-    If ``scaler_path`` points to an existing file, that scaler is loaded
-    and used for transform only (no re-fit). Otherwise a new scaler is
-    fit on ``df`` and returned — and saved to ``scaler_path`` if provided.
-
-    Args:
-        df: Input DataFrame. Must contain all columns in ``feature_cols``
-            and a ``customer_unique_id`` column used as the output index.
-        feature_cols: Columns to scale. Defaults to FINAL_FEATURES.
-        scaler_path: Optional path to a pre-fitted scaler (.pkl). If
-            provided and the file exists, the scaler is loaded; otherwise
-            a new scaler is fit and saved here.
-
-    Returns:
-        Tuple of:
-        - DataFrame indexed by customer_unique_id with scaled features.
-        - The fitted StandardScaler instance.
-
-    Raises:
-        KeyError: If ``feature_cols`` contains columns absent from ``df``.
-        ValueError: If any null values remain in ``feature_cols``.
+    If scaler_path exists the saved scaler is reused (no re-fit), otherwise
+    a new scaler is fit and optionally saved to scaler_path.
+    Output DataFrame is indexed by customer_unique_id.
     """
     if feature_cols is None:
         feature_cols = FINAL_FEATURES

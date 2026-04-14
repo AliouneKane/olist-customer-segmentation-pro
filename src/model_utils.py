@@ -1,18 +1,8 @@
-"""Clustering utilities for Olist customer segmentation.
+"""Clustering algorithms, metrics, visualisation and model persistence for Olist.
 
-Provides algorithm wrappers (KMeans, BisectingKMeans, AgglomerativeClustering,
-GaussianMixture, DBSCAN, HDBSCAN), metric computation, MLFlow integration,
-visualization helpers, and model persistence utilities.
-
-All functions:
-- Accept X as a numpy ndarray of scaled features (n_samples, n_features)
-- Log to MLFlow when called inside an active run context
-- Follow PEP 8 / Black formatting
-- Use Google docstrings and full type hints
-
-Production inference contract:
-- KMeans, BisectingKMeans, AgglomerativeClustering, GaussianMixture → have predict()
-- DBSCAN, HDBSCAN → transductive, no predict() → not eligible for production model
+KMeans / BisectingKMeans / CAH / GMM / DBSCAN / HDBSCAN wrappers, each with
+optional MLFlow logging. Only KMeans-family models have predict() and can be
+used for production inference on new customers.
 """
 
 from __future__ import annotations
@@ -64,31 +54,18 @@ SILHOUETTE_SAMPLE_SIZE = 10_000
 RANDOM_STATE = 42
 
 
-# ── A. Métriques ──────────────────────────────────────────────────────────────
+# A. Metrics
 
 def compute_clustering_metrics(
     X: np.ndarray,
     labels: np.ndarray,
     wcss: float | None = None,
 ) -> dict[str, float]:
-    """Computes a standard suite of clustering quality metrics.
+    """Compute silhouette, Davies-Bouldin and Calinski-Harabasz for a clustering result.
 
-    Silhouette score is computed on a sample of 10,000 points when n > 10,000
-    to avoid O(n²) memory cost. Davies-Bouldin and Calinski-Harabasz are
-    computed on the full dataset (O(k·n)).
-
-    Noise points (label == -1, from DBSCAN/HDBSCAN) are excluded before
-    any metric computation. If fewer than 2 distinct non-noise clusters
-    remain, all metrics are returned as NaN without raising.
-
-    Args:
-        X: Scaled feature matrix, shape (n_samples, n_features).
-        labels: Integer cluster labels, shape (n_samples,). May include -1.
-        wcss: Optional KMeans inertia_ value. Included in output if provided.
-
-    Returns:
-        Dict with keys: silhouette, davies_bouldin, calinski_harabasz,
-        and optionally wcss.
+    Noise points (label -1) are excluded. Silhouette is sampled at 10k points
+    to avoid O(n²) cost. Returns NaN metrics (no exception) when fewer than
+    2 valid clusters exist.
     """
     mask = labels != -1
     X_valid = X[mask]
@@ -127,7 +104,7 @@ def compute_clustering_metrics(
     return result
 
 
-# ── B. K-Means ────────────────────────────────────────────────────────────────
+# B. KMeans
 
 def run_kmeans_search(
     X: np.ndarray,
@@ -137,22 +114,9 @@ def run_kmeans_search(
     experiment_name: str = "olist_customer_segmentation",
     parent_run_id: str | None = None,
 ) -> pd.DataFrame:
-    """Searches over k values for KMeans using elbow + silhouette criteria.
+    """Run KMeans for each k in k_range and return a metrics DataFrame indexed by k.
 
-    For each k in k_range, fits KMeans and optionally logs a child MLFlow
-    run. Returns a summary DataFrame for plotting elbow and silhouette curves.
-
-    Args:
-        X: Scaled feature matrix.
-        k_range: Range of k values to evaluate.
-        n_init: Number of KMeans initializations per k.
-        random_state: Seed for reproducibility.
-        experiment_name: MLFlow experiment name (used for child run tagging).
-        parent_run_id: If provided, child runs are nested under this run.
-
-    Returns:
-        DataFrame indexed by k with columns: wcss, silhouette,
-        davies_bouldin, calinski_harabasz.
+    Logs a nested MLFlow child run per k when parent_run_id is provided.
     """
     rows = []
     for k in k_range:
@@ -189,18 +153,7 @@ def fit_kmeans(
     random_state: int = RANDOM_STATE,
     log_model: bool = True,
 ) -> tuple[KMeans, np.ndarray, dict[str, float]]:
-    """Fits KMeans with the specified k and logs to the active MLFlow run.
-
-    Args:
-        X: Scaled feature matrix.
-        k: Number of clusters.
-        n_init: Number of initializations.
-        random_state: Seed.
-        log_model: Whether to log the fitted model as an MLFlow artifact.
-
-    Returns:
-        Tuple of (fitted KMeans, labels array, metrics dict).
-    """
+    """Fit KMeans(k) and return (model, labels, metrics). Logs to active MLFlow run."""
     model = KMeans(n_clusters=k, init="k-means++", n_init=n_init,
                    random_state=random_state)
     labels = model.fit_predict(X)
@@ -218,7 +171,7 @@ def fit_kmeans(
     return model, labels, metrics
 
 
-# ── C. Bisecting K-Means ──────────────────────────────────────────────────────
+# C. Bisecting KMeans
 
 def run_bisecting_kmeans_search(
     X: np.ndarray,
@@ -227,22 +180,7 @@ def run_bisecting_kmeans_search(
     random_state: int = RANDOM_STATE,
     parent_run_id: str | None = None,
 ) -> pd.DataFrame:
-    """Searches over k values for BisectingKMeans.
-
-    BisectingKMeans recursively bisects the largest cluster at each step,
-    producing more balanced cluster sizes than standard KMeans.
-
-    Args:
-        X: Scaled feature matrix.
-        k_range: Range of k values to evaluate.
-        n_init: Number of initializations per bisection step.
-        random_state: Seed.
-        parent_run_id: If provided, child runs are nested under this run.
-
-    Returns:
-        DataFrame indexed by k with columns: wcss, silhouette,
-        davies_bouldin, calinski_harabasz.
-    """
+    """Like run_kmeans_search but using BisectingKMeans (produces more balanced clusters)."""
     rows = []
     for k in k_range:
         model = BisectingKMeans(n_clusters=k, n_init=n_init,
@@ -274,18 +212,7 @@ def fit_bisecting_kmeans(
     random_state: int = RANDOM_STATE,
     log_model: bool = True,
 ) -> tuple[BisectingKMeans, np.ndarray, dict[str, float]]:
-    """Fits BisectingKMeans with the specified k.
-
-    Args:
-        X: Scaled feature matrix.
-        k: Number of clusters.
-        n_init: Number of initializations per bisection.
-        random_state: Seed.
-        log_model: Whether to log model to active MLFlow run.
-
-    Returns:
-        Tuple of (fitted BisectingKMeans, labels, metrics dict).
-    """
+    """Fit BisectingKMeans(k) and return (model, labels, metrics)."""
     model = BisectingKMeans(n_clusters=k, n_init=n_init, random_state=random_state)
     labels = model.fit_predict(X)
     metrics = compute_clustering_metrics(X, labels, wcss=model.inertia_)
@@ -301,7 +228,7 @@ def fit_bisecting_kmeans(
     return model, labels, metrics
 
 
-# ── D. CAH (Agglomerative Clustering) ────────────────────────────────────────
+# D. CAH (Agglomerative Clustering)
 
 def run_cah_search(
     X: np.ndarray,
@@ -366,17 +293,7 @@ def fit_cah(
     linkage_method: str = "ward",
     log_model: bool = True,
 ) -> tuple[AgglomerativeClustering, np.ndarray, dict[str, float]]:
-    """Fits AgglomerativeClustering with the specified k.
-
-    Args:
-        X: Scaled feature matrix.
-        k: Number of clusters.
-        linkage_method: Linkage criterion.
-        log_model: Whether to log model to active MLFlow run.
-
-    Returns:
-        Tuple of (fitted AgglomerativeClustering, labels, metrics dict).
-    """
+    """Fit AgglomerativeClustering(k) and return (model, labels, metrics)."""
     model = AgglomerativeClustering(n_clusters=k, linkage=linkage_method)
     labels = model.fit_predict(X)
     metrics = compute_clustering_metrics(X, labels)
@@ -392,7 +309,7 @@ def fit_cah(
     return model, labels, metrics
 
 
-# ── E. GMM (Gaussian Mixture Models) ─────────────────────────────────────────
+# E. GMM (Gaussian Mixture Models)
 
 def run_gmm_search(
     X: np.ndarray,
@@ -465,23 +382,10 @@ def fit_gmm(
     random_state: int = RANDOM_STATE,
     log_model: bool = True,
 ) -> tuple[GaussianMixture, np.ndarray, dict[str, float]]:
-    """Fits GaussianMixture with the specified k and logs to active MLFlow run.
+    """Fit GaussianMixture(k) and return (model, labels, metrics with bic/aic/max_soft_prob).
 
-    Also computes max_soft_prob (mean of per-sample max class probability)
-    as a proxy for cluster assignment confidence — values near 1.0 indicate
-    well-separated clusters; values near 1/k indicate overlapping clusters.
-
-    Args:
-        X: Scaled feature matrix.
-        k: Number of Gaussian components.
-        covariance_type: GMM covariance structure.
-        n_init: Number of EM initializations.
-        random_state: Seed.
-        log_model: Whether to log model to active MLFlow run.
-
-    Returns:
-        Tuple of (fitted GaussianMixture, hard labels, metrics dict
-        including bic, aic, max_soft_prob).
+    max_soft_prob = mean(per-sample max class probability) — close to 1 means
+    well-separated, close to 1/k means overlapping clusters.
     """
     model = GaussianMixture(
         n_components=k,
@@ -512,7 +416,7 @@ def fit_gmm(
     return model, labels, metrics
 
 
-# ── F. DBSCAN ─────────────────────────────────────────────────────────────────
+# F. DBSCAN
 
 def estimate_dbscan_eps(
     X: np.ndarray,
@@ -622,21 +526,9 @@ def fit_dbscan(
     min_samples: int,
     log_model: bool = False,
 ) -> tuple[DBSCAN, np.ndarray, dict[str, float]]:
-    """Fits DBSCAN with the given parameters and logs to active MLFlow run.
+    """Fit DBSCAN and return (model, labels, metrics with n_clusters/noise_ratio).
 
-    Note: log_model defaults to False because DBSCAN is transductive —
-    it has no predict() method for new data. Use KMeans/CAH/GMM for
-    production scoring via assign_clusters_to_new_customers().
-
-    Args:
-        X: Scaled feature matrix.
-        eps: Neighborhood radius.
-        min_samples: Minimum points to form a core point.
-        log_model: Log model artifact. Defaults to False.
-
-    Returns:
-        Tuple of (fitted DBSCAN, labels including -1 for noise, metrics dict
-        with n_clusters and noise_ratio added).
+    log_model defaults to False — DBSCAN has no predict() so it can't score new data.
     """
     model = DBSCAN(eps=eps, min_samples=min_samples, metric="euclidean", n_jobs=-1)
     labels = model.fit_predict(X)
@@ -656,7 +548,7 @@ def fit_dbscan(
     return model, labels, metrics
 
 
-# ── G. HDBSCAN ────────────────────────────────────────────────────────────────
+# G. HDBSCAN
 
 def run_hdbscan_search(
     X: np.ndarray,
@@ -745,23 +637,10 @@ def fit_hdbscan(
     min_samples: int | None = None,
     log_model: bool = False,
 ) -> tuple[Any, np.ndarray, dict[str, float]]:
-    """Fits HDBSCAN with the given parameters and logs to active MLFlow run.
+    """Fit HDBSCAN and return (model, labels, metrics).
 
-    Note: sklearn HDBSCAN (1.3) does not support predict() for new data.
-    For production scoring, use KMeans/BisectingKMeans/CAH/GMM instead.
-
-    Args:
-        X: Scaled feature matrix.
-        min_cluster_size: Minimum size for a cluster (primary hyperparameter).
-        min_samples: Controls conservativeness of clustering. None = auto.
-        log_model: Defaults to False (no predict() in sklearn HDBSCAN).
-
-    Returns:
-        Tuple of (fitted HDBSCAN, labels including -1 for noise, metrics
-        dict with n_clusters, noise_ratio, mean_membership_prob).
-
-    Raises:
-        ImportError: If sklearn < 1.3.
+    Requires sklearn >= 1.3. log_model is False by default — sklearn HDBSCAN
+    has no predict() method.
     """
     if not _HDBSCAN_AVAILABLE:
         raise ImportError("HDBSCAN requires sklearn >= 1.3.")
@@ -793,7 +672,7 @@ def fit_hdbscan(
     return model, labels, metrics
 
 
-# ── H. Visualisation ──────────────────────────────────────────────────────────
+# H. Visualisation
 
 def plot_elbow(
     search_results: pd.DataFrame,
@@ -1154,7 +1033,7 @@ def plot_pca_clusters(
     return fig
 
 
-# ── I. Profiling & Validation ─────────────────────────────────────────────────
+# I. Profiling & Validation
 
 def build_cluster_profile(
     df_raw: pd.DataFrame,
@@ -1362,26 +1241,14 @@ def validate_hypotheses(
     return pd.DataFrame(results)
 
 
-# ── J. Persistance ────────────────────────────────────────────────────────────
+# J. Persistence
 
 def save_model(
     model: Any,
     model_path: Path,
     metadata: dict[str, Any] | None = None,
 ) -> None:
-    """Saves a fitted clustering model to disk via joblib.
-
-    Writes the model to model_path and saves a sidecar metadata JSON at
-    model_path.with_suffix('.json') if metadata is provided.
-
-    Args:
-        model: Fitted sklearn estimator.
-        model_path: Absolute Path for the .pkl file.
-        metadata: Optional dict of metadata (algorithm, k, metrics, etc.).
-
-    Raises:
-        ValueError: If model_path parent directory does not exist.
-    """
+    """Save model to model_path (.pkl). Writes a .json sidecar if metadata is given."""
     model_path = Path(model_path)
     if not model_path.parent.exists():
         raise ValueError(
@@ -1401,17 +1268,7 @@ def save_model(
 
 
 def load_model(model_path: Path) -> Any:
-    """Loads a clustering model from disk.
-
-    Args:
-        model_path: Absolute Path to the .pkl file.
-
-    Returns:
-        Fitted sklearn estimator.
-
-    Raises:
-        FileNotFoundError: If model_path does not exist.
-    """
+    """Load a joblib-serialised model. Raises FileNotFoundError if missing."""
     model_path = Path(model_path)
     if not model_path.exists():
         raise FileNotFoundError(f"load_model: file not found: {model_path}")
@@ -1426,28 +1283,9 @@ def assign_clusters_to_new_customers(
     scaler_path: Path,
     feature_cols: list[str] | None = None,
 ) -> pd.Series:
-    """Assigns cluster labels to new customers using a saved model.
+    """Score new customers: scale features, call model.predict(), return cluster Series.
 
-    Production inference function. Loads the StandardScaler, applies
-    transform, and calls model.predict(). Only compatible with models
-    that implement predict(): KMeans, BisectingKMeans,
-    AgglomerativeClustering, GaussianMixture.
-
-    Args:
-        df_new: Raw customer features DataFrame. Must contain feature_cols
-            (unscaled). Must have a 'customer_unique_id' column or index.
-        model: Fitted estimator with predict() method.
-        scaler_path: Path to the fitted StandardScaler .pkl.
-        feature_cols: Feature columns to use. Loads from sidecar JSON if
-            available, otherwise falls back to model's n_features_in_.
-
-    Returns:
-        Series of integer cluster labels, indexed by customer_unique_id.
-
-    Raises:
-        NotImplementedError: If the model does not have a predict() method
-            (e.g., DBSCAN, HDBSCAN).
-        FileNotFoundError: If scaler_path does not exist.
+    Raises NotImplementedError for models without predict() (DBSCAN, HDBSCAN).
     """
     if not hasattr(model, "predict"):
         raise NotImplementedError(

@@ -27,7 +27,7 @@ from features import (
 )
 
 
-# ── Fixtures ──────────────────────────────────────────────────────────────────
+# Fixtures
 
 
 @pytest.fixture
@@ -55,7 +55,7 @@ def sample_df() -> pd.DataFrame:
     return df
 
 
-# ── FINAL_FEATURES ────────────────────────────────────────────────────────────
+# FINAL_FEATURES
 
 
 def test_final_features_count() -> None:
@@ -79,7 +79,7 @@ def test_final_features_names() -> None:
     assert expected == set(FINAL_FEATURES)
 
 
-# ── STATE_REGION / REGION_FREIGHT_ORDER ───────────────────────────────────────
+# STATE_REGION / REGION_FREIGHT_ORDER
 
 
 def test_all_27_states_mapped() -> None:
@@ -115,7 +115,7 @@ def test_region_freight_order_unique() -> None:
     )
 
 
-# ── apply_log_transforms ──────────────────────────────────────────────────────
+# apply_log_transforms
 
 
 def test_log_transform_creates_columns() -> None:
@@ -163,7 +163,7 @@ def test_log_transform_missing_column_raises() -> None:
         apply_log_transforms(df, cols=["NonExistent"])
 
 
-# ── scale_features ────────────────────────────────────────────────────────────
+# scale_features
 
 
 def test_scale_features_fit(sample_df: pd.DataFrame) -> None:
@@ -236,7 +236,7 @@ def test_scale_features_null_raises(sample_df: pd.DataFrame) -> None:
         scale_features(df_with_null, feature_cols=FINAL_FEATURES)
 
 
-# ── OUTLIER_BOUNDS ────────────────────────────────────────────────────────────
+# OUTLIER_BOUNDS
 
 
 def test_outlier_bounds_clipping() -> None:

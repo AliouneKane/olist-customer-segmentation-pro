@@ -180,7 +180,7 @@ def render(cluster_id: int) -> None:
     name = SEGMENT_NAMES.get(cluster_id, f"Cluster {cluster_id}")
     color = SEGMENT_COLORS[cluster_id % len(SEGMENT_COLORS)]
 
-    # ── Header ─────────────────────────────────────────────────────────────────
+    # Header
     st.markdown(
         f"<h2 style='margin-bottom:0.2rem;'>"
         f"🔍 Segment — <span style='color:{color};'>{name}</span></h2>"
@@ -189,11 +189,11 @@ def render(cluster_id: int) -> None:
         unsafe_allow_html=True,
     )
 
-    # ── Segment KPIs ───────────────────────────────────────────────────────────
+    # Segment KPIs
     render_segment_kpi_row(profile_df, cluster_id)
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # ── Radar + Recommendations ────────────────────────────────────────────────
+    # Radar + Recommendations
     col_radar, col_rec = st.columns([3, 2], gap="large")
     with col_radar:
         radar_cols = [c for c in _RADAR_FEATURES if c in profile_df.columns]
@@ -205,7 +205,7 @@ def render(cluster_id: int) -> None:
 
     st.divider()
 
-    # ── Progress bar — CLV vs. Champions target ────────────────────────────────
+    # Progress bar — CLV vs. Champions target
     row = profile_df[profile_df["cluster"] == cluster_id]
     if not row.empty and "CLV_proxy" in profile_df.columns:
         clv = float(row.iloc[0]["CLV_proxy"])
@@ -220,12 +220,12 @@ def render(cluster_id: int) -> None:
 
     st.divider()
 
-    # ── AI Insight ─────────────────────────────────────────────────────────────
+    # AI Insight
     _ai_insight_section(cluster_id, profile_df)
 
     st.divider()
 
-    # ── Bar chart — segment vs. all ────────────────────────────────────────────
+    # Bar chart — segment vs. all
     st.markdown(
         f"<h3 style='color:{OLIST_BLUE}; margin-bottom:0.75rem;'>"
         "Comparaison Monetary — Ce Segment vs. Tous</h3>",
@@ -235,7 +235,7 @@ def render(cluster_id: int) -> None:
     apply_olist_theme(fig, height=300)
     st.plotly_chart(fig, use_container_width=True)
 
-    # ── Expandable profile table ───────────────────────────────────────────────
+    # Expandable profile table
     with st.expander("📄 VOIR LES MÉDIANES DE TOUS LES SEGMENTS"):
         display_df = profile_df.copy()
         for col in display_df.select_dtypes(include="float").columns:

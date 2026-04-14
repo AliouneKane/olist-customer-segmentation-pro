@@ -18,7 +18,7 @@ from streamlit_app.styles import OLIST_BLUE, apply_olist_theme
 
 def render() -> None:
     """Renders the Algorithm Comparison page."""
-    # ── Header ─────────────────────────────────────────────────────────────────
+    # Header
     st.markdown(
         f"<h2 style='color:{OLIST_BLUE}; margin-bottom:0.2rem;'>"
         "⚖️ Comparaison des Algorithmes de Clustering</h2>"
@@ -37,7 +37,7 @@ def render() -> None:
         )
         return
 
-    # ── Best algorithm banner ──────────────────────────────────────────────────
+    # Best algorithm banner
     if "composite_score" in comparison_df.columns:
         best = comparison_df.loc[comparison_df["composite_score"].idxmax()]
         algo = best.get("algorithm", "—")
@@ -65,7 +65,7 @@ def render() -> None:
 
     st.divider()
 
-    # ── Metrics table ──────────────────────────────────────────────────────────
+    # Metrics table
     st.markdown(
         f"<h3 style='color:{OLIST_BLUE}; margin-bottom:0.75rem;'>Tableau des Métriques</h3>",
         unsafe_allow_html=True,
@@ -100,7 +100,7 @@ def render() -> None:
 
     st.divider()
 
-    # ── Bar chart ──────────────────────────────────────────────────────────────
+    # Bar chart
     st.markdown(
         f"<h3 style='color:{OLIST_BLUE}; margin-bottom:0.75rem;'>Comparaison Visuelle</h3>",
         unsafe_allow_html=True,
@@ -109,12 +109,12 @@ def render() -> None:
     apply_olist_theme(bar_fig, height=420)
     st.plotly_chart(bar_fig, use_container_width=True)
 
-    # ── Plotly table ───────────────────────────────────────────────────────────
+    # Plotly table
     table_fig = table_algorithm_comparison(comparison_df)
     apply_olist_theme(table_fig, height=300)
     st.plotly_chart(table_fig, use_container_width=True)
 
-    # ── Methodology note ───────────────────────────────────────────────────────
+    # Methodology note
     with st.expander("📐 MÉTHODOLOGIE ET DÉFINITION DES MÉTRIQUES"):
         st.markdown(
             """
