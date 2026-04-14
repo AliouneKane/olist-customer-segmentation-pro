@@ -94,7 +94,7 @@ def get_ai_insight(cluster_id: int, profile_hash: str) -> str | None:  # noqa: A
     if not _GEMINI_AVAILABLE:
         return None
 
-    from dashboard.components.data_store import load_cluster_profile  # local import
+    from streamlit_app.components.data_store import load_cluster_profile  # local import
 
     profile_df = load_cluster_profile()
     row = profile_df[profile_df["cluster"] == cluster_id]

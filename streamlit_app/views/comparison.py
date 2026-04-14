@@ -7,12 +7,12 @@ from pathlib import Path
 
 import streamlit as st
 
-_PROJECT_ROOT = Path(__file__).resolve().parents[3]
+_PROJECT_ROOT = Path(__file__).resolve().parents[2]
 if str(_PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(_PROJECT_ROOT))
 
-from dashboard.components.charts import bar_algorithm_metrics, table_algorithm_comparison
-from dashboard.components.data_store import load_model_comparison
+from streamlit_app.components.charts import bar_algorithm_metrics, table_algorithm_comparison
+from streamlit_app.components.data_store import load_model_comparison
 from streamlit_app.styles import OLIST_BLUE, apply_olist_theme
 
 

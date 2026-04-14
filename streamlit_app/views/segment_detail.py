@@ -11,9 +11,9 @@ _PROJECT_ROOT = Path(__file__).resolve().parents[2]
 if str(_PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(_PROJECT_ROOT))
 
-from dashboard.components.charts import bar_segment_comparison, radar_chart
-from dashboard.components.data_store import load_cluster_profile
-from dashboard.components.segment_recommendations import (
+from streamlit_app.components.charts import bar_segment_comparison, radar_chart
+from streamlit_app.components.data_store import load_cluster_profile
+from streamlit_app.components.segment_recommendations import (
     RECOMMENDATIONS,
     SEGMENT_AVATARS,
     SEGMENT_ICONS,
@@ -112,7 +112,7 @@ def _ai_insight_section(cluster_id: int, profile_df) -> None:
     )
 
     try:
-        from dashboard.components.ai_insight import _GEMINI_AVAILABLE, get_ai_insight
+        from streamlit_app.components.ai_insight import _GEMINI_AVAILABLE, get_ai_insight
 
         if not _GEMINI_AVAILABLE:
             st.info("IA indisponible — configurez `GEMINI_API_KEY` dans `.env`.", icon="🤖")
