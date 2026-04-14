@@ -52,6 +52,38 @@ Construire un **système de segmentation client data-driven** de bout en bout :
 
 ---
 
+## Screenshots du Dashboard
+
+### Vue d'Ensemble — Storytelling & KPIs
+
+![Vue d'ensemble — Hero storytelling](docs/screenshots/01_overview_hero.png)
+
+*Intro narrative contextualisant la segmentation, avec les 3 insights critiques (Champions, Déçus, Périphériques) avant tout graphique.*
+
+![Vue d'ensemble — Indicateurs Globaux](docs/screenshots/02_overview_kpis.png)
+
+*5 KPIs globaux, distribution par segment (camembert) et heatmap des comportements.*
+
+### Détail Segment
+
+![Détail Segment — Premium Crédit](docs/screenshots/03_segment_detail.png)
+
+*Profil radar multi-dimensionnel, carte stratégie marketing, progress bar CLV vs. Champions, et plan d'action généré par Gemini AI.*
+
+### Comparaison des Algorithmes
+
+![Comparaison — Benchmark KMeans / CAH / DBSCAN](docs/screenshots/04_comparison.png)
+
+*Tableau de métriques (Silhouette, Davies-Bouldin, Calinski-Harabasz) et visualisation comparative. KMeans k=6 retenu.*
+
+### Guide du Dashboard
+
+![Guide du Dashboard](docs/screenshots/05_guide.png)
+
+*Mode d'emploi complet pour les équipes non techniques : définitions des métriques, lecture des graphiques, priorités par segment.*
+
+---
+
 ## Architecture du projet
 
 ```
@@ -76,23 +108,24 @@ olist-customer-segmentation/
 │   ├── features.py                # build_customer_features(), scale_features()
 │   └── model_utils.py             # save_model(), load_model(), assign_clusters()
 │
-├── streamlit_app/                 # Dashboard interactif (point d'entrée)
+├── streamlit_app/                 # Dashboard interactif (point d'entrée unique)
 │   ├── main.py                    # streamlit run streamlit_app/main.py
-│   ├── styles.py                  # Thème Olist (bleu #0041FF / jaune #F0FF00)
+│   ├── styles.py                  # Thème Olist (bleu #0041FF / jaune #F0FF00) + apply_olist_theme()
 │   ├── components/
-│   │   ├── sidebar.py             # Navigation + sélecteur de segment
-│   │   └── kpi_cards.py           # Métriques avec style_metric_cards
+│   │   ├── sidebar.py             # Navigation native st.button() + sélecteur de segment
+│   │   ├── kpi_cards.py           # render_global_kpi_row(), render_segment_kpi_row()
+│   │   ├── charts.py              # Figures Plotly (pie, bar, radar, heatmap)
+│   │   ├── data_store.py          # Chargement parquets avec @lru_cache
+│   │   ├── segment_recommendations.py  # Noms, avatars, recommandations par cluster
+│   │   └── ai_insight.py          # Intégration Gemini API (gemini-2.5-flash)
 │   └── views/
-│       ├── overview.py            # Vue d'ensemble + storytelling
+│       ├── overview.py            # Vue d'ensemble + storytelling + KPIs + charts
 │       ├── segment_detail.py      # Profil segment + radar + IA Gemini
 │       ├── comparison.py          # Benchmark algorithmes
 │       └── guide.py               # Guide d'utilisation équipe métier
 │
-├── dashboard/components/          # Composants réutilisés par le dashboard
-│   ├── charts.py                  # Figures Plotly (pie, bar, radar, heatmap)
-│   ├── data_store.py              # Chargement parquets avec @lru_cache
-│   ├── segment_recommendations.py # Noms, avatars, recommandations par cluster
-│   └── ai_insight.py              # Intégration Gemini API
+├── docs/
+│   └── screenshots/               # Captures d'écran du dashboard
 │
 ├── scripts/
 │   └── generate_artifacts.py      # Génère tous les parquets sans Jupyter
