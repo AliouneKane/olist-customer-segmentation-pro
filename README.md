@@ -56,13 +56,9 @@ Construire un **système de segmentation client data-driven** de bout en bout :
 
 ### Vue d'Ensemble — Storytelling & KPIs
 
-![Vue d'ensemble — Hero storytelling](docs/screenshots/01_overview_hero.png)
+![Vue d'ensemble](docs/screenshots/01_overview_hero.png)
 
-*Intro narrative contextualisant la segmentation, avec les 3 insights critiques (Champions, Déçus, Périphériques) avant tout graphique.*
-
-![Vue d'ensemble — Indicateurs Globaux](docs/screenshots/02_overview_kpis.png)
-
-*5 KPIs globaux, distribution par segment (camembert) et heatmap des comportements.*
+*Intro narrative avec les 3 insights critiques (Champions, Déçus, Périphériques), KPIs globaux, distribution par segment et heatmap des comportements.*
 
 ### Détail Segment
 
