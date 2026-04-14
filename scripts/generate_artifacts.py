@@ -1,10 +1,10 @@
-"""Minimal artifact generation — no MLFlow, no seaborn, lean imports.
+"""Generate all dashboard artifacts without running Jupyter notebooks.
 
-Generates the 4 files needed by the dashboard:
+Produces:
   data/processed/customer_features_labeled.parquet
   data/processed/cluster_profile.parquet
   data/processed/model_comparison.csv
-  models/best_clustering_kmeans_k<K>.pkl  (+.json sidecar)
+  models/best_clustering_kmeans_k<K>.pkl  (+ .json sidecar)
 
 Usage:
     python scripts/generate_artifacts.py
@@ -28,7 +28,7 @@ from sklearn.metrics import (
     calinski_harabasz_score,
 )
 
-# ── Paths ─────────────────────────────────────────────────────────────────────
+# Paths
 PROJECT_ROOT  = Path(__file__).resolve().parents[1]
 PROCESSED_DIR = PROJECT_ROOT / "data" / "processed"
 MODELS_DIR    = PROJECT_ROOT / "models"
@@ -41,7 +41,7 @@ print(f"PROJECT_ROOT  : {PROJECT_ROOT}")
 print(f"PROCESSED_DIR : {PROCESSED_DIR}")
 print(f"FINAL_FEATURES: {FINAL_FEATURES}")
 
-# ── Load ──────────────────────────────────────────────────────────────────────
+# Load scaled and raw feature parquets
 print("\n[1/4] Loading parquets…")
 X_scaled_df = pd.read_parquet(PROCESSED_DIR / "customer_features_scaled.parquet")
 if "customer_unique_id" in X_scaled_df.columns:
@@ -53,7 +53,7 @@ X = X_scaled_df[FINAL_FEATURES].values.astype(np.float32)  # float32 halves RAM
 assert not np.isnan(X).any(), "NaN in X"
 print(f"  X shape : {X.shape}  ({X.nbytes / 1e6:.1f} MB)")
 
-# ── KMeans k-search ───────────────────────────────────────────────────────────
+# KMeans k-search
 print("\n[2/4] KMeans k-search (k=4,5,6)…")
 results = {}
 for k in [4, 5, 6]:
@@ -70,12 +70,12 @@ for k in [4, 5, 6]:
     del km
     gc.collect()
 
-# ── Select best k ─────────────────────────────────────────────────────────────
+# Pick the k with the highest silhouette
 best_k = max(results, key=lambda k: results[k]["silhouette"])
 best   = results[best_k]
 print(f"\n  Best k = {best_k}  (silhouette={best['silhouette']:.4f})")
 
-# ── Model comparison CSV ──────────────────────────────────────────────────────
+# Build model_comparison.csv
 print("\n[3/4] Building comparison table…")
 rows = []
 for k, r in results.items():
@@ -101,7 +101,7 @@ comp_df["composite_score"] = (
 comp_df.to_csv(PROCESSED_DIR / "model_comparison.csv", index=False)
 print(comp_df[["algorithm", "silhouette", "davies_bouldin", "composite_score"]].to_string(index=False))
 
-# ── Label dataset + cluster profile ──────────────────────────────────────────
+# Label the full dataset and build the cluster profile
 print("\n[4/4] Saving artifacts…")
 df_labeled = df_raw.copy()
 df_labeled["cluster"] = pd.Series(

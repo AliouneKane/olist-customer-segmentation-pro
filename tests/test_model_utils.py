@@ -27,7 +27,7 @@ from model_utils import (
 )
 
 
-# ── Fixtures ──────────────────────────────────────────────────────────────────
+# Fixtures
 
 
 @pytest.fixture
@@ -64,7 +64,7 @@ def sample_raw_df(synthetic_X: np.ndarray) -> pd.DataFrame:
     )
 
 
-# ── compute_clustering_metrics ────────────────────────────────────────────────
+# compute_clustering_metrics
 
 
 def test_metrics_basic_keys(synthetic_X: np.ndarray, kmeans_model: KMeans) -> None:
@@ -120,7 +120,7 @@ def test_metrics_all_noise_returns_nan(synthetic_X: np.ndarray) -> None:
     assert np.isnan(m["silhouette"])
 
 
-# ── save_model / load_model ───────────────────────────────────────────────────
+# save_model / load_model
 
 
 def test_save_load_roundtrip(kmeans_model: KMeans, synthetic_X: np.ndarray) -> None:
@@ -171,7 +171,7 @@ def test_load_model_missing_file_raises() -> None:
         load_model(Path("/tmp/does_not_exist_xyz.pkl"))
 
 
-# ── assign_clusters_to_new_customers ─────────────────────────────────────────
+# assign_clusters_to_new_customers
 
 
 def test_assign_clusters_kmeans(
@@ -217,7 +217,7 @@ def test_assign_clusters_dbscan_raises(synthetic_X: np.ndarray) -> None:
             assign_clusters_to_new_customers(df_dummy, dbscan, scaler_path)
 
 
-# ── build_cluster_profile ─────────────────────────────────────────────────────
+# build_cluster_profile
 
 
 def test_profile_shape(

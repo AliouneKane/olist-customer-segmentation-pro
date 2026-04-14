@@ -1,8 +1,4 @@
-"""Sidebar navigation — pure Streamlit buttons (no iframe, fully stylable).
-
-Using st.button() instead of streamlit-option-menu avoids the iframe
-white-background issue. Navigation state is persisted in session_state.
-"""
+"""Sidebar navigation using native st.button() — navigation state in session_state."""
 
 from __future__ import annotations
 
@@ -41,7 +37,7 @@ def render_sidebar() -> tuple[str, int]:
         st.session_state["selected_cluster"] = 0
 
     with st.sidebar:
-        # ── Logo ──────────────────────────────────────────────────────────
+        # Logo
         st.markdown(
             """
             <div style="text-align:center; padding:1rem 0 1.25rem 0;">
@@ -63,7 +59,7 @@ def render_sidebar() -> tuple[str, int]:
             unsafe_allow_html=True,
         )
 
-        # ── Navigation label ──────────────────────────────────────────────
+        # Navigation label
         st.markdown(
             "<p style='font-size:0.65rem; color:rgba(255,255,255,0.45);"
             " text-transform:uppercase; letter-spacing:0.1em;"
@@ -71,7 +67,7 @@ def render_sidebar() -> tuple[str, int]:
             unsafe_allow_html=True,
         )
 
-        # ── Navigation buttons ────────────────────────────────────────────
+        # Nav buttons — primary style = active page
         current = st.session_state["current_page"]
         for page in _PAGES:
             is_active = page["name"] == current
@@ -91,7 +87,7 @@ def render_sidebar() -> tuple[str, int]:
             unsafe_allow_html=True,
         )
 
-        # ── Segment selector (only shown on relevant pages) ───────────────
+        # Segment selector
         st.markdown(
             "<p style='font-size:0.65rem; color:rgba(255,255,255,0.45);"
             " text-transform:uppercase; letter-spacing:0.1em;"
@@ -111,7 +107,7 @@ def render_sidebar() -> tuple[str, int]:
         )
         st.session_state["selected_cluster"] = cluster_id
 
-        # ── Footer ────────────────────────────────────────────────────────
+        # Footer
         st.markdown(
             "<hr style='border-color:rgba(255,255,255,0.18); margin:14px 0;'>",
             unsafe_allow_html=True,

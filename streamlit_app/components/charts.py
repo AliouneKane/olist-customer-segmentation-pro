@@ -1,10 +1,6 @@
-"""Plotly chart factory functions for the Olist Segmentation dashboard.
+"""Plotly chart functions for the Olist dashboard.
 
-All functions return go.Figure objects (Plotly). They are intentionally
-stateless — they accept DataFrames and return figures with no side effects.
-
-These are Plotly rewrites of the matplotlib functions in src/model_utils.py,
-optimized for interactivity and embedding in Dash callbacks.
+Each function takes a DataFrame and returns a go.Figure — no side effects.
 """
 
 from __future__ import annotations
@@ -19,19 +15,11 @@ from plotly.subplots import make_subplots
 _PALETTE = px.colors.qualitative.Set2
 
 
-# ── Distribution ──────────────────────────────────────────────────────────────
+# Distribution
 
 
 def pie_segment_distribution(profile_df: pd.DataFrame) -> go.Figure:
-    """Pie chart showing customer distribution across segments.
-
-    Args:
-        profile_df: Output of build_cluster_profile(). Must have
-            ``cluster``, ``n_customers`` columns.
-
-    Returns:
-        Plotly Figure.
-    """
+    """Donut chart of customer distribution across segments."""
     labels = [f"Cluster {c}" for c in profile_df["cluster"]]
     fig = px.pie(
         profile_df,
@@ -46,19 +34,11 @@ def pie_segment_distribution(profile_df: pd.DataFrame) -> go.Figure:
     return fig
 
 
-# ── Bar comparisons ───────────────────────────────────────────────────────────
+# Bar comparisons
 
 
 def bar_segment_comparison(profile_df: pd.DataFrame, metric_col: str) -> go.Figure:
-    """Bar chart comparing all segments on a single metric.
-
-    Args:
-        profile_df: Cluster profile DataFrame.
-        metric_col: Column name to plot on the y-axis.
-
-    Returns:
-        Plotly Figure.
-    """
+    """Bar chart comparing all segments on metric_col."""
     df = profile_df.copy()
     df["segment_label"] = df["cluster"].apply(lambda c: f"Cluster {c}")
 
@@ -77,14 +57,7 @@ def bar_segment_comparison(profile_df: pd.DataFrame, metric_col: str) -> go.Figu
 
 
 def bar_algorithm_metrics(comparison_df: pd.DataFrame) -> go.Figure:
-    """Grouped bar chart comparing algorithms on silhouette, DB, CH.
-
-    Args:
-        comparison_df: Output of model_comparison.csv.
-
-    Returns:
-        Plotly Figure.
-    """
+    """Grouped bar chart comparing algorithms on silhouette, Davies-Bouldin and CH."""
     metrics = ["silhouette", "davies_bouldin", "calinski_harabasz"]
     available = [m for m in metrics if m in comparison_df.columns]
     if not available:
@@ -117,7 +90,7 @@ def bar_algorithm_metrics(comparison_df: pd.DataFrame) -> go.Figure:
     return fig
 
 
-# ── Radar chart ───────────────────────────────────────────────────────────────
+# Radar chart
 
 
 def radar_chart(
@@ -125,20 +98,9 @@ def radar_chart(
     feature_cols: list[str],
     selected_cluster: int | None = None,
 ) -> go.Figure:
-    """Spider/radar chart showing per-cluster feature profiles.
+    """Radar chart of per-cluster feature profiles (min-max normalized).
 
-    Features are min-max normalized across all clusters so they share
-    the same [0, 1] scale. The selected cluster trace is highlighted
-    with a thicker line and filled area.
-
-    Args:
-        profile_df: Cluster profile DataFrame.
-        feature_cols: Feature columns to include on radar axes.
-        selected_cluster: Cluster label to highlight. If None, all clusters
-            are rendered with equal weight.
-
-    Returns:
-        Plotly Figure using go.Scatterpolar.
+    The selected_cluster trace is highlighted with a filled area and thicker line.
     """
     cols = [c for c in feature_cols if c in profile_df.columns]
     if not cols:
@@ -186,22 +148,14 @@ def radar_chart(
     return fig
 
 
-# ── Heatmap ───────────────────────────────────────────────────────────────────
+# Heatmap
 
 
 def heatmap_cluster_features(
     profile_df: pd.DataFrame,
     feature_cols: list[str],
 ) -> go.Figure:
-    """Heatmap of per-cluster feature medians (raw values).
-
-    Args:
-        profile_df: Cluster profile DataFrame.
-        feature_cols: Feature columns to display.
-
-    Returns:
-        Plotly Figure.
-    """
+    """Heatmap of per-cluster feature medians (raw values, RdYlGn scale)."""
     cols = [c for c in feature_cols if c in profile_df.columns]
     if not cols:
         return go.Figure()
@@ -229,20 +183,11 @@ def heatmap_cluster_features(
     return fig
 
 
-# ── Tables ────────────────────────────────────────────────────────────────────
+# Tables
 
 
 def table_algorithm_comparison(comparison_df: pd.DataFrame) -> go.Figure:
-    """Styled table comparing clustering algorithms.
-
-    Highlights the row with the highest composite_score in green.
-
-    Args:
-        comparison_df: Model comparison DataFrame.
-
-    Returns:
-        Plotly Figure (go.Table).
-    """
+    """Plotly table of algorithm metrics — best composite_score row highlighted in green."""
     cols_to_show = [
         c
         for c in [

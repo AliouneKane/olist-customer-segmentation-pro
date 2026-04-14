@@ -88,7 +88,7 @@ def _segment_card(cluster_id: int, name: str, icon: str,
 def render() -> None:
     """Renders the dashboard guide page."""
 
-    # ── Hero ───────────────────────────────────────────────────────────────────
+    # Hero
     st.markdown(
         f"""
         <div style="background:linear-gradient(135deg,{OLIST_BLUE} 0%,#0033cc 100%);
@@ -111,9 +111,7 @@ def render() -> None:
         unsafe_allow_html=True,
     )
 
-    # ══════════════════════════════════════════════════════════════════════════
     # 1. PAR OÙ COMMENCER ?
-    # ══════════════════════════════════════════════════════════════════════════
     _section("Par où commencer ?", "🧭")
 
     st.markdown(
@@ -159,9 +157,7 @@ def render() -> None:
         unsafe_allow_html=True,
     )
 
-    # ══════════════════════════════════════════════════════════════════════════
     # 2. GLOSSAIRE DES MÉTRIQUES
-    # ══════════════════════════════════════════════════════════════════════════
     _section("Comprendre les métriques", "📐")
 
     st.markdown(
@@ -254,9 +250,7 @@ def render() -> None:
                         "— proposer 12-18 versements peut augmenter le panier.",
         )
 
-    # ══════════════════════════════════════════════════════════════════════════
     # 3. LIRE LES GRAPHIQUES
-    # ══════════════════════════════════════════════════════════════════════════
     _section("Comment lire les graphiques", "📈")
 
     col_a, col_b = st.columns(2, gap="medium")
@@ -325,9 +319,7 @@ def render() -> None:
             unsafe_allow_html=True,
         )
 
-    # ══════════════════════════════════════════════════════════════════════════
     # 4. LES 6 SEGMENTS EN UN COUP D'ŒIL
-    # ══════════════════════════════════════════════════════════════════════════
     _section("Les 6 segments en un coup d'œil", "👥")
 
     _segment_card(
@@ -373,9 +365,7 @@ def render() -> None:
         action="Email d'excuse + bon de réduction dans les 24h + enquête 2 questions.",
     )
 
-    # ══════════════════════════════════════════════════════════════════════════
     # 5. TABLEAU DE BORD PRIORITÉS
-    # ══════════════════════════════════════════════════════════════════════════
     _section("Tableau de bord des priorités marketing", "🎯")
 
     st.markdown(
