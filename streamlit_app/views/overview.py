@@ -66,7 +66,7 @@ def render() -> None:
             </h1>
             <p style="color:rgba(255,255,255,0.85); font-size:0.95rem;
                       max-width:620px; line-height:1.7; margin:0;">
-                Sur 93 358 acheteurs uniques Olist, <strong>6 profils distincts</strong>
+                Sur 75 937 acheteurs Olist (après nettoyage IQR), <strong>4 profils distincts</strong>
                 ont été identifiés par machine learning (KMeans). Ce dashboard transforme
                 ces profils en <strong>stratégies marketing actionnables</strong> — chaque
                 segment a sa propre logique d'achat, ses leviers et ses risques.
@@ -74,13 +74,13 @@ def render() -> None:
             <div style="margin-top:14px; display:flex; gap:12px; flex-wrap:wrap;">
                 <span style="background:rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.3);
                               border-radius:20px; padding:4px 14px; font-size:0.78rem;
-                              color:#FFFFFF;">93 358 clients</span>
+                              color:#FFFFFF;">75 937 clients</span>
                 <span style="background:rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.3);
                               border-radius:20px; padding:4px 14px; font-size:0.78rem;
-                              color:#FFFFFF;">6 segments KMeans</span>
+                              color:#FFFFFF;">4 segments KMeans</span>
                 <span style="background:rgba(240,255,0,0.25); border:1px solid rgba(240,255,0,0.5);
                               border-radius:20px; padding:4px 14px; font-size:0.78rem;
-                              color:{OLIST_YELLOW};">Silhouette 0.213 ✓</span>
+                              color:{OLIST_YELLOW};">Silhouette 0.379 ✓</span>
             </div>
         </div>
         """,
@@ -97,28 +97,28 @@ def render() -> None:
     with k1:
         _story_card(
             "🏆",
-            "3 % de clients = 15 % du revenu",
-            "Le segment Champions (Cluster 4) ne représente que 2 801 clients "
-            "mais génère un CLV proxy de 476 BRL — <strong>3× la moyenne</strong>. "
+            "3 % de clients = 4× le CLV moyen",
+            "Le segment Champions (Cluster 1) ne représente que 2 133 clients "
+            "mais génère un CLV proxy de 418 BRL — <strong>4× la moyenne</strong>. "
             "Perdre ce segment coûte très cher. C'est votre priorité absolue.",
-            color=SEGMENT_COLORS[4],
+            color=SEGMENT_COLORS[1],
         )
     with k2:
         _story_card(
-            "😞",
-            "11 % des clients sont à risque immédiat",
-            "Le Cluster 5 (Déçus) affiche une note de <strong>1/5</strong> malgré "
-            "une livraison en avance. L'insatisfaction vient du produit, pas de "
-            "la logistique. Sans action dans les 30 jours, c'est du churn certain.",
-            color=SEGMENT_COLORS[5],
+            "🌙",
+            "30 % des clients sont dormants",
+            "Le Cluster 0 (Dormants) n'a pas commandé depuis <strong>plus d'un an</strong> "
+            "(390 jours en médiane). Sans campagne de réactivation dans les 30 jours, "
+            "cette base est définitivement perdue.",
+            color=SEGMENT_COLORS[0],
         )
     with k3:
         _story_card(
-            "📍",
-            "Le fret tue 9 % de votre base",
-            "Le Cluster 2 (Périphériques) paie <strong>84 % de la valeur du panier</strong> "
-            "en frais de livraison. Ce segment n'achètera plus si vous ne résolvez pas "
-            "le problème de coût logistique dans les régions éloignées.",
+            "⭐",
+            "33 % ont un fort potentiel de repeat",
+            "Le Cluster 2 (Acheteurs Premium) est récent (~161 jours) avec un panier "
+            "élevé (~181 BRL) mais <strong>une seule commande</strong>. "
+            "Un email de nurturing au bon moment peut doubler leur CLV.",
             color=SEGMENT_COLORS[2],
         )
 

@@ -26,12 +26,10 @@ BORDER_LIGHT = "#e5e7eb"
 GRID_COLOR = "#e5e7eb"
 
 SEGMENT_COLORS = [
-    "#0041FF",  # 0 — Olist blue
-    "#6b7280",  # 1 — gray
-    "#f59e0b",  # 2 — amber
-    "#0ea5e9",  # 3 — sky blue
-    "#22c55e",  # 4 — green
-    "#ef4444",  # 5 — red
+    "#6b7280",  # 0 — Dormants (gray)
+    "#22c55e",  # 1 — Champions (green)
+    "#0041FF",  # 2 — Acheteurs Premium (Olist blue)
+    "#f59e0b",  # 3 — Acheteurs Budget (amber)
 ]
 
 # CSS injected into every page

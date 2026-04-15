@@ -17,15 +17,13 @@ _PAGES = [
 ]
 
 _SEGMENT_LABELS = {
-    0: "Premium Crédit",
-    1: "Économes Boleto",
-    2: "Périphériques Contraints",
-    3: "Mainstream",
-    4: "Champions",
-    5: "Déçus / Insatisfaits",
+    0: "Dormants",
+    1: "Champions",
+    2: "Acheteurs Premium",
+    3: "Acheteurs Budget",
 }
 
-_SEGMENT_ICONS = {0: "💳", 1: "🐷", 2: "📍", 3: "👥", 4: "🏆", 5: "😞"}
+_SEGMENT_ICONS = {0: "🌙", 1: "🏆", 2: "⭐", 3: "🛒"}
 
 
 def render_sidebar() -> tuple[str, int]:
@@ -95,8 +93,8 @@ def render_sidebar() -> tuple[str, int]:
             unsafe_allow_html=True,
         )
 
-        options = list(range(6))
-        current_cluster = st.session_state["selected_cluster"]
+        options = list(range(4))
+        current_cluster = min(st.session_state["selected_cluster"], 3)
         cluster_id = st.selectbox(
             label="segment",
             options=options,
@@ -115,7 +113,7 @@ def render_sidebar() -> tuple[str, int]:
         st.markdown(
             "<div style='font-size:0.65rem; color:rgba(255,255,255,0.4);"
             " line-height:2; padding-bottom:0.5rem;'>"
-            "📦 93 358 clients · k=6 · Sil. 0.213"
+            "📦 75 937 clients · k=4 · Sil. 0.379"
             "</div>",
             unsafe_allow_html=True,
         )
