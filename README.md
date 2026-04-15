@@ -41,14 +41,12 @@ Construire un **système de segmentation client data-driven** de bout en bout :
 
 | Segment | Clients | Part | Panier médian | CLV proxy | Signal principal |
 |---------|---------|------|---------------|-----------|-----------------|
-| 💳 Premium Crédit | 15 222 | 16% | 231 BRL | 231 BRL | Inactif depuis 8 mois — réactiver |
-| 🐷 Économes Boleto | 18 238 | 20% | 98 BRL | 98 BRL | Prix-sensible — promotions ciblées |
-| 📍 Périphériques | 8 651 | 9% | 37 BRL | 37 BRL | Fret = 84% du panier — urgence logistique |
-| 👥 Mainstream | 38 000 | 41% | 96 BRL | 96 BRL | Cœur de cible — parrainage & volume |
-| 🏆 Champions | 2 801 | 3% | 238 BRL | 476 BRL | CLV 3× la moyenne — rétention VIP |
-| 😞 Déçus | 10 446 | 11% | — | — | Note 1/5 — récupération urgente |
+| 🌙 Dormants | 22 716 | 30% | 103 BRL | 103 BRL | Inactif depuis 13 mois — réactivation urgente |
+| 🏆 Champions | 2 133 | 3% | 209 BRL | 418 BRL | CLV 4× la moyenne — rétention VIP |
+| ⭐ Acheteurs Premium | 25 347 | 33% | 181 BRL | 181 BRL | 1 achat récent à fort panier — potentiel repeat |
+| 🛒 Acheteurs Budget | 25 741 | 34% | 64 BRL | 64 BRL | 1 achat récent — volume & promotions ciblées |
 
-**Algorithme retenu :** KMeans k=6 · Silhouette 0.213 · Davies-Bouldin 1.89
+**Algorithme retenu :** KMeans k=4 · Silhouette 0.379 · Davies-Bouldin 0.738
 
 ---
 

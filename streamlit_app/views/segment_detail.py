@@ -33,12 +33,10 @@ _RADAR_FEATURES = [
 ]
 
 _ICON_EMOJI_MAP = {
-    "bi-credit-card-2-front": "💳",
-    "bi-piggy-bank": "🐷",
-    "bi-geo-alt": "📍",
-    "bi-people": "👥",
-    "bi-trophy": "🏆",
-    "bi-emoji-frown": "😞",
+    "bi-moon-stars": "🌙",
+    "bi-trophy":     "🏆",
+    "bi-star":       "⭐",
+    "bi-cart":       "🛒",
 }
 
 
