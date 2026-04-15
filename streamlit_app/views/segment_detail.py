@@ -33,10 +33,10 @@ _RADAR_FEATURES = [
 ]
 
 _ICON_EMOJI_MAP = {
-    "bi-moon-stars": "🌙",
-    "bi-trophy":     "🏆",
-    "bi-star":       "⭐",
     "bi-cart":       "🛒",
+    "bi-hourglass":  "⏳",
+    "bi-star":       "⭐",
+    "bi-moon-stars": "🌙",
 }
 
 

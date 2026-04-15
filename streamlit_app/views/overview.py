@@ -67,7 +67,7 @@ def render() -> None:
             <p style="color:rgba(255,255,255,0.85); font-size:0.95rem;
                       max-width:620px; line-height:1.7; margin:0;">
                 Sur 75 937 acheteurs Olist (après nettoyage IQR), <strong>4 profils distincts</strong>
-                ont été identifiés par machine learning (KMeans). Ce dashboard transforme
+                ont été identifiés par machine learning (UMAP + KMeans). Ce dashboard transforme
                 ces profils en <strong>stratégies marketing actionnables</strong> — chaque
                 segment a sa propre logique d'achat, ses leviers et ses risques.
             </p>
@@ -77,10 +77,10 @@ def render() -> None:
                               color:#FFFFFF;">75 937 clients</span>
                 <span style="background:rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.3);
                               border-radius:20px; padding:4px 14px; font-size:0.78rem;
-                              color:#FFFFFF;">4 segments KMeans</span>
+                              color:#FFFFFF;">4 segments UMAP+KMeans</span>
                 <span style="background:rgba(240,255,0,0.25); border:1px solid rgba(240,255,0,0.5);
                               border-radius:20px; padding:4px 14px; font-size:0.78rem;
-                              color:{OLIST_YELLOW};">Silhouette 0.379 ✓</span>
+                              color:{OLIST_YELLOW};">Silhouette 0.449 ✓</span>
             </div>
         </div>
         """,
@@ -96,30 +96,30 @@ def render() -> None:
     k1, k2, k3 = st.columns(3, gap="medium")
     with k1:
         _story_card(
-            "🏆",
-            "3 % de clients = 4× le CLV moyen",
-            "Le segment Champions (Cluster 1) ne représente que 2 133 clients "
-            "mais génère un CLV proxy de 418 BRL — <strong>4× la moyenne</strong>. "
-            "Perdre ce segment coûte très cher. C'est votre priorité absolue.",
-            color=SEGMENT_COLORS[1],
+            "⭐",
+            "24 % = votre cible premium à convertir",
+            "Les Acheteurs Premium (Cluster 2) ont commandé il y a ~4 mois avec un panier "
+            "de <strong>180 BRL</strong>. Une seule commande à ce stade — "
+            "un email de nurturing ciblé peut doubler leur CLV.",
+            color=SEGMENT_COLORS[2],
         )
     with k2:
         _story_card(
             "🌙",
-            "30 % des clients sont dormants",
-            "Le Cluster 0 (Dormants) n'a pas commandé depuis <strong>plus d'un an</strong> "
-            "(390 jours en médiane). Sans campagne de réactivation dans les 30 jours, "
-            "cette base est définitivement perdue.",
-            color=SEGMENT_COLORS[0],
+            "23 % de dormants à fort potentiel",
+            "Les Dormants Premium (Cluster 3) ont dépensé ~160 BRL mais sont "
+            "inactifs depuis <strong>367 jours</strong>. Ils ont prouvé leur "
+            "capacité à dépenser — une réactivation urgente avant la perte définitive.",
+            color=SEGMENT_COLORS[3],
         )
     with k3:
         _story_card(
-            "⭐",
-            "33 % ont un fort potentiel de repeat",
-            "Le Cluster 2 (Acheteurs Premium) est récent (~161 jours) avec un panier "
-            "élevé (~181 BRL) mais <strong>une seule commande</strong>. "
-            "Un email de nurturing au bon moment peut doubler leur CLV.",
-            color=SEGMENT_COLORS[2],
+            "🛒",
+            "28 % = volume et récurrence à activer",
+            "Les Acheteurs Budget (Cluster 0) sont récents (~4 mois) mais économes "
+            "(panier ~64 BRL). Ce segment de <strong>volume représente 28%</strong> "
+            "de la base — des promotions ciblées peuvent augmenter la fréquence.",
+            color=SEGMENT_COLORS[0],
         )
 
     st.markdown("<div style='margin-top:1.5rem;'></div>", unsafe_allow_html=True)

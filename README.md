@@ -39,14 +39,14 @@ Construire un **système de segmentation client data-driven** de bout en bout :
 
 ## Résultats clés
 
-| Segment | Clients | Part | Panier médian | CLV proxy | Signal principal |
-|---------|---------|------|---------------|-----------|-----------------|
-| 🌙 Dormants | 22 716 | 30% | 103 BRL | 103 BRL | Inactif depuis 13 mois — réactivation urgente |
-| 🏆 Champions | 2 133 | 3% | 209 BRL | 418 BRL | CLV 4× la moyenne — rétention VIP |
-| ⭐ Acheteurs Premium | 25 347 | 33% | 181 BRL | 181 BRL | 1 achat récent à fort panier — potentiel repeat |
-| 🛒 Acheteurs Budget | 25 741 | 34% | 64 BRL | 64 BRL | 1 achat récent — volume & promotions ciblées |
+| Segment | Clients | Part | Panier médian | Récence | Signal principal |
+|---------|---------|------|---------------|---------|-----------------|
+| 🛒 Acheteurs Budget | 21 146 | 28% | 64 BRL | 124j | Récents, économes — volume & fidélisation |
+| ⏳ Dormants Budget | 18 775 | 25% | 72 BRL | 292j | Inactifs, faible valeur — réactivation low-cost |
+| ⭐ Acheteurs Premium | 18 546 | 24% | 180 BRL | 131j | Récents, fort panier — nurturing & upsell |
+| 🌙 Dormants Premium | 17 470 | 23% | 160 BRL | 367j | Inactifs, valeur prouvée — réactivation urgente |
 
-**Algorithme retenu :** KMeans k=4 · Silhouette 0.379 · Davies-Bouldin 0.738
+**Algorithme retenu :** UMAP(n_neighbors=750) + KMeans k=4 · Silhouette 0.449 · Davies-Bouldin 0.737
 
 ---
 

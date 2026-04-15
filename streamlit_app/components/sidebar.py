@@ -17,13 +17,13 @@ _PAGES = [
 ]
 
 _SEGMENT_LABELS = {
-    0: "Dormants",
-    1: "Champions",
+    0: "Acheteurs Budget",
+    1: "Dormants Budget",
     2: "Acheteurs Premium",
-    3: "Acheteurs Budget",
+    3: "Dormants Premium",
 }
 
-_SEGMENT_ICONS = {0: "🌙", 1: "🏆", 2: "⭐", 3: "🛒"}
+_SEGMENT_ICONS = {0: "🛒", 1: "⏳", 2: "⭐", 3: "🌙"}
 
 
 def render_sidebar() -> tuple[str, int]:
@@ -113,7 +113,7 @@ def render_sidebar() -> tuple[str, int]:
         st.markdown(
             "<div style='font-size:0.65rem; color:rgba(255,255,255,0.4);"
             " line-height:2; padding-bottom:0.5rem;'>"
-            "📦 75 937 clients · k=4 · Sil. 0.379"
+            "📦 75 937 clients · k=4 · Sil. 0.449"
             "</div>",
             unsafe_allow_html=True,
         )
