@@ -56,19 +56,19 @@ Construire un **système de segmentation client data-driven** de bout en bout :
 
 ![Vue d'ensemble](docs/screenshots/01_overview_hero.png)
 
-*Intro narrative avec les 3 insights critiques (Champions, Déçus, Périphériques), KPIs globaux, distribution par segment et heatmap des comportements.*
+*Intro narrative avec les 3 insights critiques (Acheteurs Premium, Dormants Premium, Acheteurs Budget), KPIs globaux, distribution par segment et heatmap des comportements.*
 
 ### Détail Segment
 
-![Détail Segment — Premium Crédit](docs/screenshots/03_segment_detail.png)
+![Détail Segment — Acheteurs Premium](docs/screenshots/03_segment_detail.png)
 
-*Profil radar multi-dimensionnel, carte stratégie marketing, progress bar CLV vs. Champions, et plan d'action généré par Gemini AI.*
+*Profil radar multi-dimensionnel, carte stratégie marketing, progress bar CLV vs. maximum, et plan d'action généré par Gemini AI.*
 
 ### Comparaison des Algorithmes
 
 ![Comparaison — Benchmark KMeans / CAH / DBSCAN](docs/screenshots/04_comparison.png)
 
-*Tableau de métriques (Silhouette, Davies-Bouldin, Calinski-Harabasz) et visualisation comparative. KMeans k=6 retenu.*
+*Tableau de métriques (Silhouette, Davies-Bouldin, Calinski-Harabasz) et visualisation comparative. UMAP+KMeans k=4 retenu, silhouette 0.449.*
 
 ### Guide du Dashboard
 
