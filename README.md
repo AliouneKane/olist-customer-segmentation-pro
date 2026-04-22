@@ -194,18 +194,45 @@ data/raw/
 Créer un fichier `.env` à la racine :
 
 ```env
-# PostgreSQL
+# PostgreSQL (adapter selon votre config Docker)
 POSTGRES_HOST=localhost
-POSTGRES_PORT=5432
-POSTGRES_DB=olist
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=your_password
+POSTGRES_PORT=5444
+POSTGRES_DB=olist_db
+POSTGRES_USER=olist_user
+POSTGRES_PASSWORD=olist_password
 
 # Gemini API (optionnel)
 GEMINI_API_KEY=your_gemini_api_key
 ```
 
-### 5. Pipeline ML — exécuter les notebooks dans l'ordre
+> **Docker PostgreSQL :** le `docker-compose.yml` fourni crée automatiquement la base avec ces valeurs par défaut. Lancer avec :
+>
+> **macOS / Linux**
+> ```bash
+> docker-compose up -d
+> ```
+> **Windows**
+> ```bat
+> docker-compose up -d
+> ```
+
+### 5. Ingestion des données dans PostgreSQL
+
+⚠️ **À exécuter avant les notebooks** — ce script charge tous les CSV dans la base PostgreSQL.
+
+**macOS / Linux**
+```bash
+python src/data_loader.py
+```
+
+**Windows**
+```bat
+python src\data_loader.py
+```
+
+Le script parcourt `data/raw/`, crée une table par fichier CSV et confirme l'ingestion ligne par ligne.
+
+### 6. Pipeline ML — exécuter les notebooks dans l'ordre
 
 **macOS / Linux**
 ```bash
@@ -245,7 +272,7 @@ jupyter nbconvert --to notebook --execute notebooks\04_simulation.ipynb
 >
 > Ce script produit directement `cluster_profile.parquet`, `customer_features_labeled.parquet`, `model_comparison.csv` et les modèles `.pkl` dans `data/processed/`.
 
-### 6. Lancer le dashboard
+### 7. Lancer le dashboard
 
 **macOS / Linux**
 ```bash
@@ -265,7 +292,7 @@ Ouvrir **http://localhost:8501** dans le navigateur.
 - **Comparaison** — benchmark des algorithmes de clustering
 - **Guide du Dashboard** — mode d'emploi pour les équipes non techniques
 
-### 7. Tests
+### 8. Tests
 
 **macOS / Linux**
 ```bash
@@ -277,7 +304,7 @@ pytest tests/ -v
 pytest tests\ -v
 ```
 
-### 8. Arrêter le dashboard
+### 9. Arrêter le dashboard
 
 **macOS / Linux**
 ```bash
