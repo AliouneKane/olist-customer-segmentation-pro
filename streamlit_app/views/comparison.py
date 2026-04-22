@@ -37,17 +37,25 @@ def render() -> None:
         )
         return
 
-    # Best algorithm banner
+    # Best algorithm banner — prefer ★-marked row (production choice) over raw composite max
     if "composite_score" in comparison_df.columns:
-        best = comparison_df.loc[comparison_df["composite_score"].idxmax()]
-        algo = best.get("algorithm", "—")
+        star_mask = comparison_df["algorithm"].str.contains("★", na=False)
+        best = (
+            comparison_df.loc[star_mask].iloc[0]
+            if star_mask.any()
+            else comparison_df.loc[comparison_df["composite_score"].idxmax()]
+        )
+        algo = best.get("algorithm", "—").replace(" ★", " ★")
         k = int(best.get("n_clusters", best.get("k", 0)))
         sil = float(best.get("silhouette", 0))
 
         col_a, col_b, col_c = st.columns(3, gap="small")
         with col_a:
             st.info("Meilleur Algorithme", icon="🏆")
-            st.metric("Algo", f"{algo} (k={k})")
+            st.markdown(
+                f"<div style='font-size:1.5rem; font-weight:700; padding:0.25rem 0;'>{algo}</div>",
+                unsafe_allow_html=True,
+            )
         with col_b:
             st.info("Silhouette Score ↑", icon="📈")
             st.metric("Score", f"{sil:.4f}")
