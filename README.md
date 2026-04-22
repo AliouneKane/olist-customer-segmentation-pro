@@ -1,4 +1,4 @@
-# Olist Customer Segmentation
+# Olist Customer Segmentation Pro
 
 > **Transformer 93 358 transactions en stratégies marketing actionnables grâce au Machine Learning**
 
@@ -16,8 +16,8 @@ La question centrale : **qui sont réellement les clients Olist, et comment leur
 
 Les équipes marketing opèrent sans visibilité claire sur la diversité des profils clients. Résultat :
 
-- Des campagnes mass-market qui ignorent les clients à fort potentiel (Champions)
-- Des clients insatisfaits qui partent sans qu'on les ait jamais contactés (Déçus)
+- Des campagnes mass-market qui ignorent les clients à fort potentiel
+- Des clients inactifs à valeur prouvée qui partent sans qu'on les ait jamais recontactés
 - Un budget CRM dépensé indistinctement sur tous les segments, même les moins rentables
 
 **Sans segmentation, toute stratégie marketing est une dépense à l'aveugle.**
@@ -30,7 +30,7 @@ Construire un **système de segmentation client data-driven** de bout en bout :
 
 1. Ingérer et modéliser les données dans PostgreSQL
 2. Calculer des features RFM enrichies (récence, fréquence, montant, satisfaction, logistique)
-3. Entraîner et comparer 3 algorithmes de clustering (KMeans, CAH, DBSCAN)
+3. Entraîner et comparer 6 algorithmes de clustering (KMeans, CAH, DBSCAN, GMM, BisectingKMeans, HDBSCAN)
 4. Déployer un dashboard interactif avec recommandations marketing par segment
 5. Intégrer une IA générative (Gemini) pour produire des plans d'action concrets
 6. Valider la stabilité temporelle du modèle et recommander une fréquence de ré-entraînement
@@ -46,7 +46,7 @@ Construire un **système de segmentation client data-driven** de bout en bout :
 | ⭐ Acheteurs Premium | 18 546 | 24% | 180 BRL | 131j | Récents, fort panier — nurturing & upsell |
 | 🌙 Dormants Premium | 17 470 | 23% | 160 BRL | 367j | Inactifs, valeur prouvée — réactivation urgente |
 
-**Algorithme retenu :** UMAP(n_neighbors=750) + KMeans k=4 · Silhouette 0.449 · Davies-Bouldin 0.737
+**Algorithme retenu :** UMAP(n_neighbors=750) + KMeans k=4 · Silhouette **0.449** · Davies-Bouldin 0.737
 
 ---
 
@@ -81,7 +81,7 @@ Construire un **système de segmentation client data-driven** de bout en bout :
 ## Architecture du projet
 
 ```
-olist-customer-segmentation/
+olist-customer-segmentation-pro/
 │
 ├── .github/workflows/             # CI/CD GitHub Actions
 │   ├── ci.yml                     # Tests + black à chaque push
@@ -104,9 +104,9 @@ olist-customer-segmentation/
 │
 ├── streamlit_app/                 # Dashboard interactif (point d'entrée unique)
 │   ├── main.py                    # streamlit run streamlit_app/main.py
-│   ├── styles.py                  # Thème Olist (bleu #0041FF / jaune #F0FF00) + apply_olist_theme()
+│   ├── styles.py                  # Thème Olist (bleu #0041FF / jaune #F0FF00)
 │   ├── components/
-│   │   ├── sidebar.py             # Navigation native st.button() + sélecteur de segment
+│   │   ├── sidebar.py             # Navigation + sélecteur de segment
 │   │   ├── kpi_cards.py           # render_global_kpi_row(), render_segment_kpi_row()
 │   │   ├── charts.py              # Figures Plotly (pie, bar, radar, heatmap)
 │   │   ├── data_store.py          # Chargement parquets avec @lru_cache
@@ -153,17 +153,23 @@ olist-customer-segmentation/
 ### 1. Cloner le dépôt
 
 ```bash
-git clone https://github.com/AliouneKane/olist-customer-segmentation.git
-cd olist-customer-segmentation
+git clone https://github.com/AliouneKane/olist-customer-segmentation-pro.git
+cd olist-customer-segmentation-pro
 ```
 
 ### 2. Environnement virtuel
 
+**macOS / Linux**
 ```bash
 python3.10 -m venv venv
-source venv/bin/activate        # macOS / Linux
-# venv\Scripts\activate         # Windows
+source venv/bin/activate
+pip install -r requirements.txt
+```
 
+**Windows**
+```bat
+python -m venv venv
+venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
@@ -201,27 +207,54 @@ GEMINI_API_KEY=your_gemini_api_key
 
 ### 5. Pipeline ML — exécuter les notebooks dans l'ordre
 
+**macOS / Linux**
 ```bash
 # Option A — Jupyter interactif
 jupyter notebook
 
-# Option B — Exécution headless (nbconvert)
+# Option B — Exécution headless
 MPLBACKEND=Agg jupyter nbconvert --to notebook --execute notebooks/01_eda.ipynb
 MPLBACKEND=Agg jupyter nbconvert --to notebook --execute notebooks/02_preprocessing_fe.ipynb
 MPLBACKEND=Agg jupyter nbconvert --to notebook --execute notebooks/03_clustering.ipynb
 MPLBACKEND=Agg jupyter nbconvert --to notebook --execute notebooks/04_simulation.ipynb
 ```
 
+**Windows**
+```bat
+:: Option A — Jupyter interactif
+jupyter notebook
+
+:: Option B — Exécution headless
+set MPLBACKEND=Agg
+jupyter nbconvert --to notebook --execute notebooks\01_eda.ipynb
+jupyter nbconvert --to notebook --execute notebooks\02_preprocessing_fe.ipynb
+jupyter nbconvert --to notebook --execute notebooks\03_clustering.ipynb
+jupyter nbconvert --to notebook --execute notebooks\04_simulation.ipynb
+```
+
 > **Sur machine à mémoire limitée :** utiliser le script de génération directe qui contourne le kernel Jupyter :
+>
+> macOS / Linux
 > ```bash
 > python scripts/generate_artifacts.py
 > ```
+> Windows
+> ```bat
+> python scripts\generate_artifacts.py
+> ```
+>
 > Ce script produit directement `cluster_profile.parquet`, `customer_features_labeled.parquet`, `model_comparison.csv` et les modèles `.pkl` dans `data/processed/`.
 
 ### 6. Lancer le dashboard
 
+**macOS / Linux**
 ```bash
 streamlit run streamlit_app/main.py
+```
+
+**Windows**
+```bat
+streamlit run streamlit_app\main.py
 ```
 
 Ouvrir **http://localhost:8501** dans le navigateur.
@@ -229,13 +262,31 @@ Ouvrir **http://localhost:8501** dans le navigateur.
 **Pages disponibles :**
 - **Vue d'ensemble** — distribution des segments, KPIs globaux, storytelling
 - **Détail Segment** — profil radar, recommandations marketing, plan d'action IA
-- **Comparaison** — benchmark des 3 algorithmes de clustering
+- **Comparaison** — benchmark des algorithmes de clustering
 - **Guide du Dashboard** — mode d'emploi pour les équipes non techniques
 
 ### 7. Tests
 
+**macOS / Linux**
 ```bash
 pytest tests/ -v
+```
+
+**Windows**
+```bat
+pytest tests\ -v
+```
+
+### 8. Arrêter le dashboard
+
+**macOS / Linux**
+```bash
+pkill -f "streamlit run"
+```
+
+**Windows**
+```bat
+taskkill /F /IM python.exe /FI "WINDOWTITLE eq streamlit*"
 ```
 
 ---
@@ -244,7 +295,14 @@ pytest tests/ -v
 
 ### Build et run local
 
+**macOS / Linux**
 ```bash
+docker build -t olist-segmentation .
+docker run -p 8080:8080 --env-file .env olist-segmentation
+```
+
+**Windows**
+```bat
 docker build -t olist-segmentation .
 docker run -p 8080:8080 --env-file .env olist-segmentation
 ```
@@ -264,7 +322,7 @@ Secrets GitHub requis :
 | Couche | Technologies |
 |--------|-------------|
 | Données | PostgreSQL 14, pandas 2.2, pyarrow |
-| Machine Learning | scikit-learn 1.5, scipy 1.13, MLFlow 2.13 |
+| Machine Learning | scikit-learn 1.5, umap-learn 0.5, scipy 1.13, MLFlow 2.13 |
 | Visualisation | Plotly 5.22, Streamlit 1.50 |
 | IA générative | Google Gemini 2.5 Flash |
 | Tests | pytest 8.2, black 24.4 |
@@ -282,6 +340,14 @@ orders ──→ order_items ──→ products        ┐
 orders ──→ order_payments                  ├──→ customer_features (RFM enrichi)
 orders ──→ order_reviews                   │
 orders ──→ customers ──→ geolocation       ┘
+```
+
+Pipeline de production :
+
+```
+RFM brut  →  IQR filter (q5/q95)  →  log10(Frequency, Monetary)
+         →  StandardScaler  →  UMAP(n_components=2, n_neighbors=750)
+         →  KMeans k=4  →  Silhouette 0.449
 ```
 
 | Feature | Description |
