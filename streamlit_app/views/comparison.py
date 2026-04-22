@@ -23,7 +23,7 @@ def render() -> None:
         f"<h2 style='color:{OLIST_BLUE}; margin-bottom:0.2rem;'>"
         "⚖️ Comparaison des Algorithmes de Clustering</h2>"
         "<p style='color:#6b7280; margin-bottom:1.25rem;'>"
-        "Benchmark KMeans · CAH · DBSCAN sur le dataset Olist (93 358 clients)</p>",
+        "Benchmark KMeans · BisectingKMeans · UMAP+KMeans sur le dataset Olist (93 358 clients)</p>",
         unsafe_allow_html=True,
     )
 
@@ -131,6 +131,11 @@ Rapport entre la variance inter-clusters et la variance intra-clusters.
 Plus il est élevé, plus les clusters sont denses et bien séparés.
 
 **Score Composite** = normalisé(Silhouette ↑) + normalisé(1/DB ↓) + normalisé(CH ↑) / 3
-KMeans k=6 retenu avec Silhouette **0.213** comme algorithme de production.
+
+**Pipeline retenu** : UMAP(n_neighbors=750, n_components=2) + KMeans k=4
+Silhouette **0.449** · Davies-Bouldin **0.737** · Score Composite **0.627**
+
+Le passage à UMAP permet de projeter les 9 features RFM en 2 dimensions
+avant le clustering, ce qui améliore la cohésion des clusters de 0.22 → 0.45.
             """
         )
