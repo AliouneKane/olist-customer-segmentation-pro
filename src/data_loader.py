@@ -10,21 +10,33 @@ from typing import List
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
-# Load environment variables
-load_dotenv()
+# Load environment variables — explicit path so it works from any CWD (notebooks, scripts, etc.)
+load_dotenv(Path(__file__).resolve().parent.parent / ".env")
 
 def get_db_engine() -> Engine:
     """Creates a SQLAlchemy engine for PostgreSQL.
 
     Returns:
         Engine: SQLAlchemy engine object.
+
+    Raises:
+        EnvironmentError: If any required PostgreSQL env variable is missing.
     """
     user = os.getenv("POSTGRES_USER")
     password = os.getenv("POSTGRES_PASSWORD")
     host = os.getenv("POSTGRES_HOST")
     port = os.getenv("POSTGRES_PORT")
     db = os.getenv("POSTGRES_DB")
-    
+
+    missing = [k for k, v in {"POSTGRES_USER": user, "POSTGRES_PASSWORD": password,
+                               "POSTGRES_HOST": host, "POSTGRES_PORT": port,
+                               "POSTGRES_DB": db}.items() if v is None]
+    if missing:
+        raise EnvironmentError(
+            f"Variables manquantes dans .env : {', '.join(missing)}. "
+            "Créez un fichier .env à la racine du projet."
+        )
+
     connection_string = f"postgresql://{user}:{password}@{host}:{port}/{db}"
     return create_engine(connection_string)
 
