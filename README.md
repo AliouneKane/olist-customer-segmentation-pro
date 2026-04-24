@@ -316,6 +316,36 @@ pkill -f "streamlit run"
 taskkill /F /IM python.exe /FI "WINDOWTITLE eq streamlit*"
 ```
 
+### 10. Arrêter Docker proprement
+
+Quand vous avez terminé ou souhaitez faire une pause, arrêtez le conteneur PostgreSQL :
+
+#### Pause (conserve les données, redémarrage rapide)
+
+```bash
+docker-compose stop
+```
+
+#### Arrêt complet (supprime le conteneur, données conservées dans le volume)
+
+```bash
+docker-compose down
+```
+
+#### Réinitialisation totale (supprime conteneur + volume + données)
+
+```bash
+docker-compose down -v
+```
+
+> ⚠️ `down -v` efface toutes les données ingérées — il faudra relancer `python src/data_loader.py` au prochain démarrage.
+
+Pour reprendre une session après `docker-compose stop` ou `down` :
+
+```bash
+docker-compose up -d
+```
+
 ---
 
 ## Déploiement Docker
