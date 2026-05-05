@@ -32,7 +32,7 @@ from sklearn.metrics import (
     silhouette_score,
 )
 from sklearn.mixture import GaussianMixture
-from sklearn.neighbors import NearestNeighbors
+from sklearn.neighbors import NearestNeighbors, kneighbors_graph
 from sklearn.preprocessing import MinMaxScaler
 
 try:
@@ -121,7 +121,7 @@ def run_kmeans_search(
     rows = []
     for k in k_range:
         model = KMeans(n_clusters=k, init="k-means++", n_init=n_init,
-                       random_state=random_state)
+                       random_state=random_state, n_jobs=-1)
         labels = model.fit_predict(X)
         metrics = compute_clustering_metrics(X, labels, wcss=model.inertia_)
         metrics["k"] = k
@@ -155,7 +155,7 @@ def fit_kmeans(
 ) -> tuple[KMeans, np.ndarray, dict[str, float]]:
     """Fit KMeans(k) and return (model, labels, metrics). Logs to active MLFlow run."""
     model = KMeans(n_clusters=k, init="k-means++", n_init=n_init,
-                   random_state=random_state)
+                   random_state=random_state, n_jobs=-1)
     labels = model.fit_predict(X)
     metrics = compute_clustering_metrics(X, labels, wcss=model.inertia_)
 
@@ -234,14 +234,18 @@ def run_cah_search(
     X: np.ndarray,
     k_range: range = range(2, 13),
     linkage_method: str = "ward",
-    dendrogram_sample_size: int = 15_000,
+    dendrogram_sample_size: int = 5_000,
     parent_run_id: str | None = None,
+    use_connectivity: bool = True,
+    n_connectivity_neighbors: int = 15,
 ) -> tuple[pd.DataFrame, np.ndarray]:
     """Runs CAH over k_range and returns metrics + linkage matrix for dendrogram.
 
-    Uses sklearn AgglomerativeClustering for the k-sweep (memory-safe — no
-    explicit distance matrix). Computes scipy linkage on a sample for the
-    dendrogram only (scipy linkage is O(n²) memory, unsafe on 90k+ samples).
+    Uses sklearn AgglomerativeClustering for the k-sweep. When use_connectivity
+    is True (default), a KNN connectivity graph is computed once and passed to
+    AgglomerativeClustering, reducing memory from O(n²) to O(n·k_neighbors) —
+    critical for datasets above ~20k rows. Computes scipy linkage on a sample
+    for the dendrogram only (scipy linkage is O(n²) memory).
 
     Args:
         X: Scaled feature matrix.
@@ -249,14 +253,32 @@ def run_cah_search(
         linkage_method: Linkage criterion. 'ward' recommended.
         dendrogram_sample_size: Size of sample for scipy linkage (dendro only).
         parent_run_id: If provided, child runs are nested under this run.
+        use_connectivity: Build a KNN graph as connectivity constraint.
+            Prevents O(n²) memory crash on large datasets. Recommended True.
+        n_connectivity_neighbors: Number of neighbors for the KNN graph.
+            15 gives a good balance between structure and connectivity.
 
     Returns:
         Tuple of (metrics DataFrame indexed by k, scipy linkage matrix Z
         computed on sample — pass to plot_dendrogram()).
     """
+    connectivity = None
+    if use_connectivity and len(X) > 5_000:
+        logger.info(
+            "Building %d-NN connectivity graph for CAH (n=%d)...",
+            n_connectivity_neighbors, len(X),
+        )
+        conn = kneighbors_graph(
+            X, n_neighbors=n_connectivity_neighbors,
+            mode="connectivity", include_self=False, n_jobs=-1,
+        )
+        connectivity = conn + conn.T  # symmetrize — required for Ward
+
     rows = []
     for k in k_range:
-        model = AgglomerativeClustering(n_clusters=k, linkage=linkage_method)
+        model = AgglomerativeClustering(
+            n_clusters=k, linkage=linkage_method, connectivity=connectivity,
+        )
         labels = model.fit_predict(X)
         metrics = compute_clustering_metrics(X, labels)
         metrics["k"] = k
@@ -292,9 +314,29 @@ def fit_cah(
     k: int,
     linkage_method: str = "ward",
     log_model: bool = True,
+    use_connectivity: bool = True,
+    n_connectivity_neighbors: int = 15,
 ) -> tuple[AgglomerativeClustering, np.ndarray, dict[str, float]]:
-    """Fit AgglomerativeClustering(k) and return (model, labels, metrics)."""
-    model = AgglomerativeClustering(n_clusters=k, linkage=linkage_method)
+    """Fit AgglomerativeClustering(k) and return (model, labels, metrics).
+
+    use_connectivity=True (default) builds a KNN graph to cap memory at
+    O(n·k_neighbors) instead of O(n²) — prevents crashes on 90k+ datasets.
+    """
+    connectivity = None
+    if use_connectivity and len(X) > 5_000:
+        logger.info(
+            "Building %d-NN connectivity graph for CAH final fit (n=%d)...",
+            n_connectivity_neighbors, len(X),
+        )
+        conn = kneighbors_graph(
+            X, n_neighbors=n_connectivity_neighbors,
+            mode="connectivity", include_self=False, n_jobs=-1,
+        )
+        connectivity = conn + conn.T
+
+    model = AgglomerativeClustering(
+        n_clusters=k, linkage=linkage_method, connectivity=connectivity,
+    )
     labels = model.fit_predict(X)
     metrics = compute_clustering_metrics(X, labels)
 
@@ -315,7 +357,7 @@ def run_gmm_search(
     X: np.ndarray,
     k_range: range = range(2, 13),
     covariance_type: str = "full",
-    n_init: int = 5,
+    n_init: int = 3,
     random_state: int = RANDOM_STATE,
     parent_run_id: str | None = None,
 ) -> pd.DataFrame:
@@ -378,7 +420,7 @@ def fit_gmm(
     X: np.ndarray,
     k: int,
     covariance_type: str = "full",
-    n_init: int = 5,
+    n_init: int = 3,
     random_state: int = RANDOM_STATE,
     log_model: bool = True,
 ) -> tuple[GaussianMixture, np.ndarray, dict[str, float]]:
@@ -980,11 +1022,13 @@ def plot_pca_clusters(
     noise_label: int = -1,
     figsize: tuple[int, int] = (12, 8),
     random_state: int = RANDOM_STATE,
+    max_points: int = 10_000,
 ) -> plt.Figure:
     """Projects X to 2D via PCA and colors points by cluster label.
 
-    Noise points (label == noise_label) are plotted in gray with lower
-    alpha. Explained variance is shown on axis labels.
+    PCA is fitted on the full dataset for accuracy; the scatter is capped at
+    max_points (stratified by cluster label) so rendering stays fast regardless
+    of dataset size. Noise points are plotted in gray with lower alpha.
 
     Args:
         X: Scaled feature matrix.
@@ -993,6 +1037,8 @@ def plot_pca_clusters(
         noise_label: Label value for noise points (DBSCAN/HDBSCAN).
         figsize: Figure dimensions.
         random_state: PCA seed.
+        max_points: Maximum scatter points. Stratified sample is taken when
+            len(X) > max_points. Set to None to plot all points.
 
     Returns:
         Matplotlib Figure.
@@ -1000,10 +1046,26 @@ def plot_pca_clusters(
     from sklearn.decomposition import PCA
 
     pca = PCA(n_components=2, random_state=random_state)
-    X_pca = pca.fit_transform(X)
+    X_pca_full = pca.fit_transform(X)
     var = pca.explained_variance_ratio_
 
-    unique_labels = sorted(set(labels))
+    # Stratified subsample for rendering — keep cluster proportions intact
+    if max_points is not None and len(X) > max_points:
+        rng = np.random.default_rng(random_state)
+        unique_lbls = np.unique(labels)
+        keep_idx: list[np.ndarray] = []
+        for lbl in unique_lbls:
+            lbl_idx = np.where(labels == lbl)[0]
+            n_take = max(1, int(round(max_points * len(lbl_idx) / len(labels))))
+            keep_idx.append(rng.choice(lbl_idx, size=min(n_take, len(lbl_idx)), replace=False))
+        idx = np.concatenate(keep_idx)
+        X_pca = X_pca_full[idx]
+        labels_plot = labels[idx]
+    else:
+        X_pca = X_pca_full
+        labels_plot = labels
+
+    unique_labels = sorted(set(labels_plot))
     palette = sns.color_palette("tab10", len([l for l in unique_labels if l != noise_label]))
     color_map = {}
     ci = 0
@@ -1016,7 +1078,7 @@ def plot_pca_clusters(
 
     fig, ax = plt.subplots(figsize=figsize)
     for lbl in unique_labels:
-        mask = labels == lbl
+        mask = labels_plot == lbl
         alpha = 0.25 if lbl == noise_label else 0.4
         label_name = "Bruit (noise)" if lbl == noise_label else f"Cluster {lbl}"
         ax.scatter(X_pca[mask, 0], X_pca[mask, 1],
