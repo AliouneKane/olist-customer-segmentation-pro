@@ -49,7 +49,7 @@ def _metric_card(
 def _segment_card(
     cluster_id: int, name: str, icon: str, who: str, priority: str, action: str
 ) -> None:
-    color = SEGMENT_COLORS[cluster_id]
+    color = SEGMENT_COLORS[cluster_id % len(SEGMENT_COLORS)]
     st.markdown(
         f"""
         <div style="background:#FFFFFF; border:1px solid #e5e7eb;

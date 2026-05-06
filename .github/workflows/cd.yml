@@ -47,7 +47,7 @@ jobs:
       - name: Deploy to Cloud Run
         run: |
           IMAGE="${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/olist/${{ env.SERVICE }}"
-          gcloud run deploy ${{ env.SERVICE }} --image "${IMAGE}:${{ github.sha }}" --region ${{ env.REGION }} --platform managed --allow-unauthenticated --memory 1Gi --cpu 1 --min-instances 0 --max-instances 3 --port 8080
+          gcloud run deploy ${{ env.SERVICE }} --image "${IMAGE}:${{ github.sha }}" --region ${{ env.REGION }} --platform managed --allow-unauthenticated --memory 1Gi --cpu 1 --min-instances 0 --max-instances 3 --port 8080 --set-env-vars "GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}"
 
       - name: Show deployed service URL
         run: |
