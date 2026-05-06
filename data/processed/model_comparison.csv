@@ -1,0 +1,9 @@
+algorithm,silhouette,davies_bouldin,calinski_harabasz,n_clusters,composite_score
+"KMeans (9 feat., k=8)",0.2247,1.2597,15607.8,8,-0.1075
+"BisectingKMeans (9 feat., k=4)",0.1666,1.7026,14211.3,4,-0.3333
+UMAP + KMeans k=3,0.431,0.8386,81963.2,3,0.5317
+UMAP + KMeans k=4 ★,0.4486,0.7374,92506.3,4,0.6271
+UMAP + KMeans k=5,0.424,0.8067,94647.5,5,0.5824
+UMAP + KMeans k=6,0.4131,0.8014,93315.8,6,0.5663
+UMAP + KMeans k=7,0.4088,0.8132,95614.2,7,0.5658
+UMAP + KMeans k=8,0.4331,0.7307,102361.7,8,0.6483

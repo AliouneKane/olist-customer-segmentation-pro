@@ -1,0 +1,7 @@
+{
+  "generated_at": "2026-04-12T13:30:32.209303",
+  "best_model": "best_clustering_kmeans_k6.pkl",
+  "best_k": 6,
+  "note": "Run notebooks/04_simulation.ipynb for full temporal analysis",
+  "recommendation": "trimestriel"
+}

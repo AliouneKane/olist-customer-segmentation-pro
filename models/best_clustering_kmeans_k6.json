@@ -1,0 +1,19 @@
+{
+  "algorithm": "KMeans",
+  "k": 6,
+  "features": [
+    "Log_Recency",
+    "Log_Monetary",
+    "Frequency_flag",
+    "avg_freight_ratio",
+    "avg_delivery_delay",
+    "avg_review_score",
+    "payment_type_cc_flag",
+    "avg_installments",
+    "region_freight_score"
+  ],
+  "silhouette": 0.2132,
+  "davies_bouldin": 1.4344,
+  "calinski_harabasz": 15895.2,
+  "composite_score": 0.6667
+}

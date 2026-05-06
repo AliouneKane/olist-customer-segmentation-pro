@@ -20,9 +20,9 @@ COPY --from=builder /root/.local /root/.local
 
 # Application source
 COPY src/ ./src/
-COPY dashboard/ ./dashboard/
+COPY streamlit_app/ ./streamlit_app/
 
-# Pre-computed artifacts (populated by the CD pipeline after notebook execution)
+# Pre-computed artifacts (parquets + modèles générés par les notebooks)
 COPY data/processed/ ./data/processed/
 COPY models/ ./models/
 

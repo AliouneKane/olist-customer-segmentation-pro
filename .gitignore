@@ -1,7 +1,10 @@
 # ── Data & models (large files, not versioned) ────────────────────────────────
-data/
-models/
+data/raw/
+data/processed/*.csv.gz
 mlruns/
+
+# Models versionnés séparément — inclus dans l'image Docker
+# models/ décommenté intentionnellement
 
 # ── Secrets ────────────────────────────────────────────────────────────────────
 .env
