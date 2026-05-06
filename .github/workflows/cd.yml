@@ -8,6 +8,7 @@ env:
   REGION: europe-west1
   SERVICE: olist-segmentation
   REGISTRY: europe-west1-docker.pkg.dev
+  PROJECT_ID: curious-idea-490213-j8
 
 jobs:
   deploy:
@@ -34,18 +35,18 @@ jobs:
 
       - name: Build Docker image
         run: |
-          IMAGE="${{ env.REGISTRY }}/${{ secrets.GCP_PROJECT_ID }}/olist/${{ env.SERVICE }}"
+          IMAGE="${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/olist/${{ env.SERVICE }}"
           docker build -t "${IMAGE}:${{ github.sha }}" -t "${IMAGE}:latest" .
 
       - name: Push Docker image
         run: |
-          IMAGE="${{ env.REGISTRY }}/${{ secrets.GCP_PROJECT_ID }}/olist/${{ env.SERVICE }}"
+          IMAGE="${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/olist/${{ env.SERVICE }}"
           docker push "${IMAGE}:${{ github.sha }}"
           docker push "${IMAGE}:latest"
 
       - name: Deploy to Cloud Run
         run: |
-          IMAGE="${{ env.REGISTRY }}/${{ secrets.GCP_PROJECT_ID }}/olist/${{ env.SERVICE }}"
+          IMAGE="${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/olist/${{ env.SERVICE }}"
           gcloud run deploy ${{ env.SERVICE }} --image "${IMAGE}:${{ github.sha }}" --region ${{ env.REGION }} --platform managed --allow-unauthenticated --memory 1Gi --cpu 1 --min-instances 0 --max-instances 3 --port 8080
 
       - name: Show deployed service URL
