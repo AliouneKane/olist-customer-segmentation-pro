@@ -26,14 +26,20 @@ def render_global_kpi_row(profile_df: pd.DataFrame) -> None:
     """
     total_customers = int(profile_df["n_customers"].sum())
     n_clusters = len(profile_df)
-    median_clv = float(profile_df["CLV_proxy"].median()) if "CLV_proxy" in profile_df.columns else 0.0
+    median_clv = (
+        float(profile_df["CLV_proxy"].median())
+        if "CLV_proxy" in profile_df.columns
+        else 0.0
+    )
     avg_review = (
         float(profile_df["avg_review_score"].mean())
         if "avg_review_score" in profile_df.columns
         else 0.0
     )
     median_monetary = (
-        float(profile_df["Monetary"].median()) if "Monetary" in profile_df.columns else 0.0
+        float(profile_df["Monetary"].median())
+        if "Monetary" in profile_df.columns
+        else 0.0
     )
 
     col1, col2, col3, col4, col5 = st.columns(5, gap="small")
@@ -56,7 +62,11 @@ def render_global_kpi_row(profile_df: pd.DataFrame) -> None:
 
     with col5:
         st.info("Satisfaction Moy.", icon="⭐")
-        st.metric(label="Score /5", value=f"{avg_review:.2f}", help="Moyenne pondérée par segment")
+        st.metric(
+            label="Score /5",
+            value=f"{avg_review:.2f}",
+            help="Moyenne pondérée par segment",
+        )
 
     _apply_card_style()
 
@@ -103,6 +113,11 @@ def render_segment_kpi_row(profile_df: pd.DataFrame, cluster_id: int) -> None:
 
     with col5:
         st.info("Récence", icon="📅")
-        st.metric(label="Jours", value=f"{recency:.0f}", delta=f"Fréq. {frequency:.1f}x", delta_color="inverse")
+        st.metric(
+            label="Jours",
+            value=f"{recency:.0f}",
+            delta=f"Fréq. {frequency:.1f}x",
+            delta_color="inverse",
+        )
 
     _apply_card_style()

@@ -20,7 +20,12 @@ from streamlit_app.components.segment_recommendations import (
     SEGMENT_NAMES,
 )
 from streamlit_app.components.kpi_cards import render_segment_kpi_row
-from streamlit_app.styles import OLIST_BLUE, OLIST_YELLOW, SEGMENT_COLORS, apply_olist_theme
+from streamlit_app.styles import (
+    OLIST_BLUE,
+    OLIST_YELLOW,
+    SEGMENT_COLORS,
+    apply_olist_theme,
+)
 
 _RADAR_FEATURES = [
     "Monetary",
@@ -33,9 +38,9 @@ _RADAR_FEATURES = [
 ]
 
 _ICON_EMOJI_MAP = {
-    "bi-cart":       "🛒",
-    "bi-hourglass":  "⏳",
-    "bi-star":       "⭐",
+    "bi-cart": "🛒",
+    "bi-hourglass": "⏳",
+    "bi-star": "⭐",
     "bi-moon-stars": "🌙",
 }
 
@@ -110,10 +115,15 @@ def _ai_insight_section(cluster_id: int, profile_df) -> None:
     )
 
     try:
-        from streamlit_app.components.ai_insight import _GEMINI_AVAILABLE, get_ai_insight
+        from streamlit_app.components.ai_insight import (
+            _GEMINI_AVAILABLE,
+            get_ai_insight,
+        )
 
         if not _GEMINI_AVAILABLE:
-            st.info("IA indisponible — configurez `GEMINI_API_KEY` dans `.env`.", icon="🤖")
+            st.info(
+                "IA indisponible — configurez `GEMINI_API_KEY` dans `.env`.", icon="🤖"
+            )
             return
 
         row = profile_df[profile_df["cluster"] == cluster_id]
@@ -130,7 +140,8 @@ def _ai_insight_section(cluster_id: int, profile_df) -> None:
 
         # Parse numbered lines and render as numbered action cards
         lines = [
-            ln.strip() for ln in insight_md.strip().splitlines()
+            ln.strip()
+            for ln in insight_md.strip().splitlines()
             if ln.strip() and ln.strip()[0].isdigit()
         ]
         if not lines:
@@ -241,7 +252,9 @@ def render(cluster_id: int) -> None:
 
         def _hl(r):  # type: ignore[return]
             if int(r["cluster"]) == cluster_id:
-                return [f"background-color:{color}1a; font-weight:600; color:{color};"] * len(r)
+                return [
+                    f"background-color:{color}1a; font-weight:600; color:{color};"
+                ] * len(r)
             return [""] * len(r)
 
         st.dataframe(

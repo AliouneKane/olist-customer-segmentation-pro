@@ -38,16 +38,20 @@ selected_page, cluster_id = render_sidebar()
 
 if selected_page == PAGE_OVERVIEW:
     from streamlit_app.views.overview import render
+
     render()
 
 elif selected_page == PAGE_SEGMENT:
     from streamlit_app.views.segment_detail import render
+
     render(cluster_id)
 
 elif selected_page == PAGE_COMPARISON:
     from streamlit_app.views.comparison import render
+
     render()
 
 elif selected_page == PAGE_GUIDE:
     from streamlit_app.views.guide import render
+
     render()

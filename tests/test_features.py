@@ -85,9 +85,33 @@ def test_final_features_names() -> None:
 def test_all_27_states_mapped() -> None:
     """All 27 Brazilian state codes must be present in STATE_REGION."""
     brazil_states = {
-        "AC", "AL", "AM", "AP", "BA", "CE", "DF", "ES", "GO", "MA",
-        "MG", "MS", "MT", "PA", "PB", "PE", "PI", "PR", "RJ", "RN",
-        "RO", "RR", "RS", "SC", "SE", "SP", "TO",
+        "AC",
+        "AL",
+        "AM",
+        "AP",
+        "BA",
+        "CE",
+        "DF",
+        "ES",
+        "GO",
+        "MA",
+        "MG",
+        "MS",
+        "MT",
+        "PA",
+        "PB",
+        "PE",
+        "PI",
+        "PR",
+        "RJ",
+        "RN",
+        "RO",
+        "RR",
+        "RS",
+        "SC",
+        "SE",
+        "SP",
+        "TO",
     }
     assert brazil_states == set(STATE_REGION.keys())
 
@@ -96,9 +120,9 @@ def test_region_values_valid() -> None:
     """Every state must map to a known region name."""
     valid_regions = set(REGION_FREIGHT_ORDER.keys())
     for state, region in STATE_REGION.items():
-        assert region in valid_regions, (
-            f"State {state!r} maps to unknown region {region!r}"
-        )
+        assert (
+            region in valid_regions
+        ), f"State {state!r} maps to unknown region {region!r}"
 
 
 def test_region_freight_order_range() -> None:
@@ -110,9 +134,9 @@ def test_region_freight_order_range() -> None:
 def test_region_freight_order_unique() -> None:
     """Each region must have a unique ordinal score."""
     scores = list(REGION_FREIGHT_ORDER.values())
-    assert len(scores) == len(set(scores)), (
-        "Duplicate ordinal scores in REGION_FREIGHT_ORDER"
-    )
+    assert len(scores) == len(
+        set(scores)
+    ), "Duplicate ordinal scores in REGION_FREIGHT_ORDER"
 
 
 # apply_log_transforms
@@ -128,11 +152,11 @@ def test_log_transform_creates_columns() -> None:
 
 def test_log_transform_values_correct() -> None:
     """Log_Recency = log1p(Recency), all values must be >= 0."""
-    df = pd.DataFrame(
-        {"Recency": [0.0, 10.0, 365.0], "Monetary": [1.0, 100.0, 1000.0]}
-    )
+    df = pd.DataFrame({"Recency": [0.0, 10.0, 365.0], "Monetary": [1.0, 100.0, 1000.0]})
     out = apply_log_transforms(df)
-    np.testing.assert_allclose(out["Log_Recency"].values, np.log1p(df["Recency"].values))
+    np.testing.assert_allclose(
+        out["Log_Recency"].values, np.log1p(df["Recency"].values)
+    )
     np.testing.assert_allclose(
         out["Log_Monetary"].values, np.log1p(df["Monetary"].values)
     )
@@ -243,9 +267,9 @@ def test_outlier_bounds_clipping() -> None:
     """Values outside OUTLIER_BOUNDS must be clipped to the defined limits."""
     df = pd.DataFrame(
         {
-            "avg_freight_ratio": [0.0, 1.0, 5.0],    # 5.0 > upper 2.0
+            "avg_freight_ratio": [0.0, 1.0, 5.0],  # 5.0 > upper 2.0
             "avg_delivery_delay": [-100.0, 0.0, 200.0],  # -100 < -30, 200 > 60
-            "avg_installments": [0.5, 6.0, 20.0],     # 0.5 < 1, 20 > 12
+            "avg_installments": [0.5, 6.0, 20.0],  # 0.5 < 1, 20 > 12
         }
     )
     for col, (lo, hi) in OUTLIER_BOUNDS.items():

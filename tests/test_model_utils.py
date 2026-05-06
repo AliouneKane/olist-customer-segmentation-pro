@@ -34,12 +34,15 @@ from model_utils import (
 def synthetic_X() -> np.ndarray:
     """200 points in 9-dimensional space with 3 clear clusters."""
     rng = np.random.default_rng(0)
-    centers = np.array([[0, 0, 0, 0, 0, 0, 0, 0, 0],
-                        [5, 5, 5, 5, 5, 5, 5, 5, 5],
-                        [-5, -5, -5, -5, -5, -5, -5, -5, -5]], dtype=float)
-    X = np.vstack([
-        rng.normal(loc=c, scale=0.5, size=(67, 9)) for c in centers
-    ])
+    centers = np.array(
+        [
+            [0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [5, 5, 5, 5, 5, 5, 5, 5, 5],
+            [-5, -5, -5, -5, -5, -5, -5, -5, -5],
+        ],
+        dtype=float,
+    )
+    X = np.vstack([rng.normal(loc=c, scale=0.5, size=(67, 9)) for c in centers])
     return X.astype(np.float64)
 
 
@@ -192,6 +195,7 @@ def test_assign_clusters_kmeans(
         scaler = StandardScaler().fit(synthetic_X)
         scaler_path = Path(tmp) / "scaler.pkl"
         import joblib
+
         joblib.dump(scaler, scaler_path)
 
         result = assign_clusters_to_new_customers(

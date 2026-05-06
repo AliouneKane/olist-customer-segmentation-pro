@@ -55,10 +55,10 @@ RECOMMENDATIONS: dict[int, list[str]] = {
 
 # Bootstrap color names (used by the legacy Dash build if ever reactivated)
 SEGMENT_COLORS: dict[int, str] = {
-    0: "warning",    # Acheteurs Budget  — amber
+    0: "warning",  # Acheteurs Budget  — amber
     1: "secondary",  # Dormants Budget   — gray
-    2: "primary",    # Acheteurs Premium — blue
-    3: "info",       # Dormants Premium  — teal
+    2: "primary",  # Acheteurs Premium — blue
+    3: "info",  # Dormants Premium  — teal
 }
 
 # Bootstrap Icons identifiers
@@ -83,11 +83,13 @@ def get_recommendation_card(cluster_id: int):  # type: ignore[return]
     except ImportError:
         return None
 
-    name   = get_segment_name(cluster_id)
+    name = get_segment_name(cluster_id)
     avatar = SEGMENT_AVATARS.get(cluster_id, "")
-    recs   = RECOMMENDATIONS.get(cluster_id, ["Analyser le profil avant de définir une stratégie."])
-    color  = SEGMENT_COLORS.get(cluster_id, "secondary")
-    icon   = SEGMENT_ICONS.get(cluster_id, "bi-person")
+    recs = RECOMMENDATIONS.get(
+        cluster_id, ["Analyser le profil avant de définir une stratégie."]
+    )
+    color = SEGMENT_COLORS.get(cluster_id, "secondary")
+    icon = SEGMENT_ICONS.get(cluster_id, "bi-person")
 
     return dbc.Card(
         [

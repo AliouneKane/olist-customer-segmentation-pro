@@ -37,6 +37,7 @@ from sklearn.preprocessing import MinMaxScaler
 
 try:
     from sklearn.cluster import HDBSCAN  # sklearn >= 1.3
+
     _HDBSCAN_AVAILABLE = True
 except ImportError:
     _HDBSCAN_AVAILABLE = False
@@ -44,6 +45,7 @@ except ImportError:
 try:
     import mlflow
     import mlflow.sklearn
+
     _MLFLOW_AVAILABLE = True
 except ImportError:
     _MLFLOW_AVAILABLE = False
@@ -55,6 +57,7 @@ RANDOM_STATE = 42
 
 
 # A. Metrics
+
 
 def compute_clustering_metrics(
     X: np.ndarray,
@@ -106,6 +109,7 @@ def compute_clustering_metrics(
 
 # B. KMeans
 
+
 def run_kmeans_search(
     X: np.ndarray,
     k_range: range = range(2, 13),
@@ -120,8 +124,9 @@ def run_kmeans_search(
     """
     rows = []
     for k in k_range:
-        model = KMeans(n_clusters=k, init="k-means++", n_init=n_init,
-                       random_state=random_state)
+        model = KMeans(
+            n_clusters=k, init="k-means++", n_init=n_init, random_state=random_state
+        )
         labels = model.fit_predict(X)
         metrics = compute_clustering_metrics(X, labels, wcss=model.inertia_)
         metrics["k"] = k
@@ -137,10 +142,15 @@ def run_kmeans_search(
                 mlflow.set_tag("run_type", "k_search")
                 mlflow.log_param("k", k)
                 mlflow.log_param("n_init", n_init)
-                mlflow.log_metrics({m: v for m, v in metrics.items()
-                                    if m != "k" and not np.isnan(v)})
-        logger.info("KMeans k=%d | silhouette=%.4f | wcss=%.0f",
-                    k, metrics["silhouette"], metrics["wcss"])
+                mlflow.log_metrics(
+                    {m: v for m, v in metrics.items() if m != "k" and not np.isnan(v)}
+                )
+        logger.info(
+            "KMeans k=%d | silhouette=%.4f | wcss=%.0f",
+            k,
+            metrics["silhouette"],
+            metrics["wcss"],
+        )
 
     df = pd.DataFrame(rows).set_index("k")
     return df
@@ -154,8 +164,9 @@ def fit_kmeans(
     log_model: bool = True,
 ) -> tuple[KMeans, np.ndarray, dict[str, float]]:
     """Fit KMeans(k) and return (model, labels, metrics). Logs to active MLFlow run."""
-    model = KMeans(n_clusters=k, init="k-means++", n_init=n_init,
-                   random_state=random_state)
+    model = KMeans(
+        n_clusters=k, init="k-means++", n_init=n_init, random_state=random_state
+    )
     labels = model.fit_predict(X)
     metrics = compute_clustering_metrics(X, labels, wcss=model.inertia_)
 
@@ -173,6 +184,7 @@ def fit_kmeans(
 
 # C. Bisecting KMeans
 
+
 def run_bisecting_kmeans_search(
     X: np.ndarray,
     k_range: range = range(2, 13),
@@ -183,8 +195,7 @@ def run_bisecting_kmeans_search(
     """Like run_kmeans_search but using BisectingKMeans (produces more balanced clusters)."""
     rows = []
     for k in k_range:
-        model = BisectingKMeans(n_clusters=k, n_init=n_init,
-                                random_state=random_state)
+        model = BisectingKMeans(n_clusters=k, n_init=n_init, random_state=random_state)
         labels = model.fit_predict(X)
         metrics = compute_clustering_metrics(X, labels, wcss=model.inertia_)
         metrics["k"] = k
@@ -198,8 +209,9 @@ def run_bisecting_kmeans_search(
             ):
                 mlflow.set_tag("algorithm", "bisecting_kmeans")
                 mlflow.log_param("k", k)
-                mlflow.log_metrics({m: v for m, v in metrics.items()
-                                    if m != "k" and not np.isnan(v)})
+                mlflow.log_metrics(
+                    {m: v for m, v in metrics.items() if m != "k" and not np.isnan(v)}
+                )
         logger.info("BisectingKMeans k=%d | silhouette=%.4f", k, metrics["silhouette"])
 
     return pd.DataFrame(rows).set_index("k")
@@ -229,6 +241,7 @@ def fit_bisecting_kmeans(
 
 
 # D. CAH (Agglomerative Clustering)
+
 
 def run_cah_search(
     X: np.ndarray,
@@ -271,8 +284,9 @@ def run_cah_search(
                 mlflow.set_tag("algorithm", "cah")
                 mlflow.set_tag("linkage", linkage_method)
                 mlflow.log_param("k", k)
-                mlflow.log_metrics({m: v for m, v in metrics.items()
-                                    if m != "k" and not np.isnan(v)})
+                mlflow.log_metrics(
+                    {m: v for m, v in metrics.items() if m != "k" and not np.isnan(v)}
+                )
         logger.info("CAH k=%d | silhouette=%.4f", k, metrics["silhouette"])
 
     # Compute Z on sample for dendrogram (scipy is O(n²) — do NOT run on full X)
@@ -310,6 +324,7 @@ def fit_cah(
 
 
 # E. GMM (Gaussian Mixture Models)
+
 
 def run_gmm_search(
     X: np.ndarray,
@@ -366,10 +381,13 @@ def run_gmm_search(
                 mlflow.set_tag("covariance_type", covariance_type)
                 mlflow.log_param("k", k)
                 mlflow.log_param("covariance_type", covariance_type)
-                log_metrics = {m: v for m, v in metrics.items()
-                               if m != "k" and not np.isnan(v)}
+                log_metrics = {
+                    m: v for m, v in metrics.items() if m != "k" and not np.isnan(v)
+                }
                 mlflow.log_metrics(log_metrics)
-        logger.info("GMM k=%d | BIC=%.0f | silhouette=%.4f", k, bic, metrics["silhouette"])
+        logger.info(
+            "GMM k=%d | BIC=%.0f | silhouette=%.4f", k, bic, metrics["silhouette"]
+        )
 
     return pd.DataFrame(rows).set_index("k")
 
@@ -399,11 +417,13 @@ def fit_gmm(
     max_soft_prob = float(proba.max(axis=1).mean())
 
     metrics = compute_clustering_metrics(X, labels)
-    metrics.update({
-        "bic": float(model.bic(X)),
-        "aic": float(model.aic(X)),
-        "max_soft_prob": max_soft_prob,
-    })
+    metrics.update(
+        {
+            "bic": float(model.bic(X)),
+            "aic": float(model.aic(X)),
+            "max_soft_prob": max_soft_prob,
+        }
+    )
 
     if _MLFLOW_AVAILABLE and mlflow.active_run():
         mlflow.log_param("algorithm", "gmm")
@@ -417,6 +437,7 @@ def fit_gmm(
 
 
 # F. DBSCAN
+
 
 def estimate_dbscan_eps(
     X: np.ndarray,
@@ -451,10 +472,16 @@ def estimate_dbscan_eps(
 
     fig, ax = plt.subplots(figsize=(10, 5))
     ax.plot(k_distances, color="steelblue", linewidth=1.2)
-    ax.axhline(recommended_eps, color="red", linestyle="--", linewidth=1.5,
-               label=f"p{percentile:.0f} = {recommended_eps:.4f}")
-    ax.set_title(f"k-Distance Graph (k={min_samples}) — DBSCAN eps Estimation",
-                 fontsize=12)
+    ax.axhline(
+        recommended_eps,
+        color="red",
+        linestyle="--",
+        linewidth=1.5,
+        label=f"p{percentile:.0f} = {recommended_eps:.4f}",
+    )
+    ax.set_title(
+        f"k-Distance Graph (k={min_samples}) — DBSCAN eps Estimation", fontsize=12
+    )
     ax.set_xlabel("Points triés par distance croissante")
     ax.set_ylabel(f"Distance au {min_samples}e voisin")
     ax.legend(fontsize=10)
@@ -495,8 +522,12 @@ def run_dbscan_search(
             n_clusters = len(set(labels) - {-1})
             noise_ratio = float((labels == -1).mean())
             metrics = compute_clustering_metrics(X, labels)
-            row = {"eps": eps, "min_samples": ms,
-                   "n_clusters": n_clusters, "noise_ratio": noise_ratio}
+            row = {
+                "eps": eps,
+                "min_samples": ms,
+                "n_clusters": n_clusters,
+                "noise_ratio": noise_ratio,
+            }
             row.update(metrics)
             rows.append(row)
 
@@ -511,10 +542,16 @@ def run_dbscan_search(
                     mlflow.log_param("min_samples", ms)
                     mlflow.log_metric("n_clusters", n_clusters)
                     mlflow.log_metric("noise_ratio", noise_ratio)
-                    mlflow.log_metrics({m: v for m, v in metrics.items()
-                                        if not np.isnan(v)})
-            logger.info("DBSCAN eps=%.3f ms=%d | k=%d | noise=%.1f%%",
-                        eps, ms, n_clusters, noise_ratio * 100)
+                    mlflow.log_metrics(
+                        {m: v for m, v in metrics.items() if not np.isnan(v)}
+                    )
+            logger.info(
+                "DBSCAN eps=%.3f ms=%d | k=%d | noise=%.1f%%",
+                eps,
+                ms,
+                n_clusters,
+                noise_ratio * 100,
+            )
 
     df = pd.DataFrame(rows)
     return df.sort_values("silhouette", ascending=False, na_position="last")
@@ -549,6 +586,7 @@ def fit_dbscan(
 
 
 # G. HDBSCAN
+
 
 def run_hdbscan_search(
     X: np.ndarray,
@@ -622,10 +660,16 @@ def run_hdbscan_search(
                     mlflow.log_param("min_samples", ms_str)
                     mlflow.log_metric("n_clusters", n_clusters)
                     mlflow.log_metric("noise_ratio", noise_ratio)
-                    mlflow.log_metrics({m: v for m, v in metrics.items()
-                                        if not np.isnan(v)})
-            logger.info("HDBSCAN mcs=%d ms=%s | k=%d | noise=%.1f%%",
-                        mcs, ms, n_clusters, noise_ratio * 100)
+                    mlflow.log_metrics(
+                        {m: v for m, v in metrics.items() if not np.isnan(v)}
+                    )
+            logger.info(
+                "HDBSCAN mcs=%d ms=%s | k=%d | noise=%.1f%%",
+                mcs,
+                ms,
+                n_clusters,
+                noise_ratio * 100,
+            )
 
     df = pd.DataFrame(rows)
     return df.sort_values("silhouette", ascending=False, na_position="last")
@@ -657,11 +701,13 @@ def fit_hdbscan(
     mean_membership_prob = float(model.probabilities_.mean())
 
     metrics = compute_clustering_metrics(X, labels)
-    metrics.update({
-        "n_clusters": n_clusters,
-        "noise_ratio": noise_ratio,
-        "mean_membership_prob": mean_membership_prob,
-    })
+    metrics.update(
+        {
+            "n_clusters": n_clusters,
+            "noise_ratio": noise_ratio,
+            "mean_membership_prob": mean_membership_prob,
+        }
+    )
 
     if _MLFLOW_AVAILABLE and mlflow.active_run():
         mlflow.log_param("algorithm", "hdbscan")
@@ -673,6 +719,7 @@ def fit_hdbscan(
 
 
 # H. Visualisation
+
 
 def plot_elbow(
     search_results: pd.DataFrame,
@@ -692,12 +739,25 @@ def plot_elbow(
         Matplotlib Figure.
     """
     fig, ax = plt.subplots(figsize=figsize)
-    ax.plot(search_results.index, search_results["wcss"],
-            marker="o", color="steelblue", linewidth=2, markersize=6)
-    ax.fill_between(search_results.index, search_results["wcss"], alpha=0.15, color="steelblue")
+    ax.plot(
+        search_results.index,
+        search_results["wcss"],
+        marker="o",
+        color="steelblue",
+        linewidth=2,
+        markersize=6,
+    )
+    ax.fill_between(
+        search_results.index, search_results["wcss"], alpha=0.15, color="steelblue"
+    )
     if highlight_k is not None:
-        ax.axvline(highlight_k, color="red", linestyle="--", linewidth=1.5,
-                   label=f"k={highlight_k} sélectionné")
+        ax.axvline(
+            highlight_k,
+            color="red",
+            linestyle="--",
+            linewidth=1.5,
+            label=f"k={highlight_k} sélectionné",
+        )
         ax.legend(fontsize=10)
     ax.set_title(f"{algo_name} — Elbow Curve (WCSS)", fontsize=13)
     ax.set_xlabel("Nombre de clusters k")
@@ -726,13 +786,31 @@ def plot_bic_aic(
         Matplotlib Figure.
     """
     fig, ax = plt.subplots(figsize=figsize)
-    ax.plot(search_results.index, search_results["bic"],
-            marker="o", color="royalblue", linewidth=2, label="BIC (recommandé)")
-    ax.plot(search_results.index, search_results["aic"],
-            marker="s", color="coral", linewidth=2, linestyle="--", label="AIC")
+    ax.plot(
+        search_results.index,
+        search_results["bic"],
+        marker="o",
+        color="royalblue",
+        linewidth=2,
+        label="BIC (recommandé)",
+    )
+    ax.plot(
+        search_results.index,
+        search_results["aic"],
+        marker="s",
+        color="coral",
+        linewidth=2,
+        linestyle="--",
+        label="AIC",
+    )
     if highlight_k is not None:
-        ax.axvline(highlight_k, color="red", linestyle=":", linewidth=1.5,
-                   label=f"k={highlight_k} (min BIC)")
+        ax.axvline(
+            highlight_k,
+            color="red",
+            linestyle=":",
+            linewidth=1.5,
+            label=f"k={highlight_k} (min BIC)",
+        )
     ax.set_title("GMM — BIC & AIC vs Nombre de Composantes", fontsize=13)
     ax.set_xlabel("Nombre de composantes k")
     ax.set_ylabel("Critère d'information (lower = better)")
@@ -760,13 +838,25 @@ def plot_silhouette_comparison(
         Matplotlib Figure.
     """
     fig, ax = plt.subplots(figsize=figsize)
-    ax.plot(search_results.index, search_results["silhouette"],
-            marker="o", color="seagreen", linewidth=2, markersize=6)
-    ax.fill_between(search_results.index, search_results["silhouette"],
-                    alpha=0.15, color="seagreen")
+    ax.plot(
+        search_results.index,
+        search_results["silhouette"],
+        marker="o",
+        color="seagreen",
+        linewidth=2,
+        markersize=6,
+    )
+    ax.fill_between(
+        search_results.index, search_results["silhouette"], alpha=0.15, color="seagreen"
+    )
     if highlight_k is not None:
-        ax.axvline(highlight_k, color="red", linestyle="--", linewidth=1.5,
-                   label=f"k={highlight_k} sélectionné")
+        ax.axvline(
+            highlight_k,
+            color="red",
+            linestyle="--",
+            linewidth=1.5,
+            label=f"k={highlight_k} sélectionné",
+        )
         ax.legend(fontsize=10)
     ax.set_title(f"{algorithm_name} — Silhouette Score vs k", fontsize=13)
     ax.set_xlabel("Nombre de clusters k")
@@ -817,8 +907,15 @@ def plot_metrics_comparison(
         for (algo_name, df), color in zip(results_dict.items(), palette):
             if metric not in df.columns:
                 continue
-            ax.plot(df.index, df[metric], marker="o", label=algo_name,
-                    color=color, linewidth=1.8, markersize=5)
+            ax.plot(
+                df.index,
+                df[metric],
+                marker="o",
+                label=algo_name,
+                color=color,
+                linewidth=1.8,
+                markersize=5,
+            )
         ax.set_title(f"{metric}  ({direction.get(metric, '')})", fontsize=11)
         ax.set_xlabel("k")
         ax.legend(fontsize=9)
@@ -858,15 +955,26 @@ def plot_dendrogram(
         Matplotlib Figure.
     """
     fig, ax = plt.subplots(figsize=figsize)
-    ddata = dendrogram(Z, truncate_mode=truncate_mode, p=p,
-                       leaf_rotation=90, leaf_font_size=9,
-                       ax=ax, color_threshold=0)
+    ddata = dendrogram(
+        Z,
+        truncate_mode=truncate_mode,
+        p=p,
+        leaf_rotation=90,
+        leaf_font_size=9,
+        ax=ax,
+        color_threshold=0,
+    )
 
     if highlight_k is not None and highlight_k >= 2:
         # Distance at which k clusters are formed = Z[-k+1, 2]
         cut_distance = float(Z[-(highlight_k - 1), 2])
-        ax.axhline(cut_distance, color="red", linestyle="--", linewidth=1.5,
-                   label=f"Coupe k={highlight_k} à d={cut_distance:.3f}")
+        ax.axhline(
+            cut_distance,
+            color="red",
+            linestyle="--",
+            linewidth=1.5,
+            label=f"Coupe k={highlight_k} à d={cut_distance:.3f}",
+        )
         ax.legend(fontsize=10)
 
     ax.set_title(
@@ -960,8 +1068,9 @@ def plot_radar_chart(
         values = values_norm[i].tolist()
         values += values[:1]
         cluster_id = row[cluster_col] if cluster_col in row else i
-        ax.plot(angles, values, linewidth=2, color=palette[i],
-                label=f"Cluster {cluster_id}")
+        ax.plot(
+            angles, values, linewidth=2, color=palette[i], label=f"Cluster {cluster_id}"
+        )
         ax.fill(angles, values, alpha=0.12, color=palette[i])
 
     ax.set_xticks(angles[:-1])
@@ -1004,7 +1113,9 @@ def plot_pca_clusters(
     var = pca.explained_variance_ratio_
 
     unique_labels = sorted(set(labels))
-    palette = sns.color_palette("tab10", len([l for l in unique_labels if l != noise_label]))
+    palette = sns.color_palette(
+        "tab10", len([l for l in unique_labels if l != noise_label])
+    )
     color_map = {}
     ci = 0
     for lbl in unique_labels:
@@ -1019,8 +1130,14 @@ def plot_pca_clusters(
         mask = labels == lbl
         alpha = 0.25 if lbl == noise_label else 0.4
         label_name = "Bruit (noise)" if lbl == noise_label else f"Cluster {lbl}"
-        ax.scatter(X_pca[mask, 0], X_pca[mask, 1],
-                   c=[color_map[lbl]], alpha=alpha, s=4, label=label_name)
+        ax.scatter(
+            X_pca[mask, 0],
+            X_pca[mask, 1],
+            c=[color_map[lbl]],
+            alpha=alpha,
+            s=4,
+            label=label_name,
+        )
 
     ax.set_xlabel(f"PC1 ({var[0] * 100:.1f}% variance)", fontsize=11)
     ax.set_ylabel(f"PC2 ({var[1] * 100:.1f}% variance)", fontsize=11)
@@ -1034,6 +1151,7 @@ def plot_pca_clusters(
 
 
 # I. Profiling & Validation
+
 
 def build_cluster_profile(
     df_raw: pd.DataFrame,
@@ -1066,15 +1184,13 @@ def build_cluster_profile(
     # Exclude noise points
     df = df[df["cluster"] != -1]
 
-    profile = (
-        df.groupby("cluster")[feature_cols]
-        .median()
-        .reset_index()
-    )
+    profile = df.groupby("cluster")[feature_cols].median().reset_index()
 
     sizes = df.groupby("cluster")[id_col].count().reset_index(name="n_customers")
     profile = profile.merge(sizes, on="cluster")
-    profile["pct_customers"] = (profile["n_customers"] / profile["n_customers"].sum() * 100).round(2)
+    profile["pct_customers"] = (
+        profile["n_customers"] / profile["n_customers"].sum() * 100
+    ).round(2)
 
     # CLV proxy
     if "Monetary" in profile.columns and "Frequency_flag" in profile.columns:
@@ -1124,124 +1240,228 @@ def validate_hypotheses(
     # H1 — High-spenders are infrequent
     try:
         top_clv_cluster = profile_df.loc[profile_df["CLV_proxy"].idxmax()]
-        freq_top = top_clv_cluster.get("Frequency", top_clv_cluster.get("Frequency_flag", None))
+        freq_top = top_clv_cluster.get(
+            "Frequency", top_clv_cluster.get("Frequency_flag", None)
+        )
         h1_ok = freq_top is not None and float(freq_top) <= 1.5
-        results.append({
-            "hypothesis_id": "H1",
-            "description": "Les high-spenders sont des acheteurs peu fréquents",
-            "status": "VALIDATED" if h1_ok else "NOT_VALIDATED",
-            "evidence": f"Cluster CLV max : Frequency médiane = {freq_top:.2f}",
-        })
+        results.append(
+            {
+                "hypothesis_id": "H1",
+                "description": "Les high-spenders sont des acheteurs peu fréquents",
+                "status": "VALIDATED" if h1_ok else "NOT_VALIDATED",
+                "evidence": f"Cluster CLV max : Frequency médiane = {freq_top:.2f}",
+            }
+        )
     except Exception as e:
-        results.append({"hypothesis_id": "H1", "description": "High-spenders infrequents",
-                        "status": "PARTIAL", "evidence": str(e)})
+        results.append(
+            {
+                "hypothesis_id": "H1",
+                "description": "High-spenders infrequents",
+                "status": "PARTIAL",
+                "evidence": str(e),
+            }
+        )
 
     # H2 — Recency > 300 = churn
     try:
-        churn_clusters = profile_df[profile_df.get("Recency", pd.Series(dtype=float)) > 300] \
-            if "Recency" in profile_df.columns else pd.DataFrame()
+        churn_clusters = (
+            profile_df[profile_df.get("Recency", pd.Series(dtype=float)) > 300]
+            if "Recency" in profile_df.columns
+            else pd.DataFrame()
+        )
         h2_ok = len(churn_clusters) >= 1
-        results.append({
-            "hypothesis_id": "H2",
-            "description": "Inactivité >300j = churn effectif",
-            "status": "VALIDATED" if h2_ok else "NOT_VALIDATED",
-            "evidence": f"{len(churn_clusters)} cluster(s) avec Recency médiane > 300j",
-        })
+        results.append(
+            {
+                "hypothesis_id": "H2",
+                "description": "Inactivité >300j = churn effectif",
+                "status": "VALIDATED" if h2_ok else "NOT_VALIDATED",
+                "evidence": f"{len(churn_clusters)} cluster(s) avec Recency médiane > 300j",
+            }
+        )
     except Exception as e:
-        results.append({"hypothesis_id": "H2", "description": "Churn Recency>300",
-                        "status": "PARTIAL", "evidence": str(e)})
+        results.append(
+            {
+                "hypothesis_id": "H2",
+                "description": "Churn Recency>300",
+                "status": "PARTIAL",
+                "evidence": str(e),
+            }
+        )
 
     # H3 — Geography predicts freight
     try:
-        if "region_freight_score" in profile_df.columns and "avg_freight_ratio" in profile_df.columns:
+        if (
+            "region_freight_score" in profile_df.columns
+            and "avg_freight_ratio" in profile_df.columns
+        ):
             from scipy.stats import spearmanr
-            rho, pval = spearmanr(profile_df["region_freight_score"],
-                                  profile_df["avg_freight_ratio"])
-            h3_status = "VALIDATED" if rho > 0.3 else ("PARTIAL" if rho > 0 else "NOT_VALIDATED")
-            results.append({
-                "hypothesis_id": "H3",
-                "description": "Géographie prédit le freight burden",
-                "status": h3_status,
-                "evidence": f"Spearman ρ(region_score, freight_ratio) = {rho:.3f} (p={pval:.3f})",
-            })
+
+            rho, pval = spearmanr(
+                profile_df["region_freight_score"], profile_df["avg_freight_ratio"]
+            )
+            h3_status = (
+                "VALIDATED"
+                if rho > 0.3
+                else ("PARTIAL" if rho > 0 else "NOT_VALIDATED")
+            )
+            results.append(
+                {
+                    "hypothesis_id": "H3",
+                    "description": "Géographie prédit le freight burden",
+                    "status": h3_status,
+                    "evidence": f"Spearman ρ(region_score, freight_ratio) = {rho:.3f} (p={pval:.3f})",
+                }
+            )
         else:
-            results.append({"hypothesis_id": "H3", "description": "Géographie → freight",
-                            "status": "PARTIAL", "evidence": "Colonnes manquantes dans profile_df"})
+            results.append(
+                {
+                    "hypothesis_id": "H3",
+                    "description": "Géographie → freight",
+                    "status": "PARTIAL",
+                    "evidence": "Colonnes manquantes dans profile_df",
+                }
+            )
     except Exception as e:
-        results.append({"hypothesis_id": "H3", "description": "Géographie → freight",
-                        "status": "PARTIAL", "evidence": str(e)})
+        results.append(
+            {
+                "hypothesis_id": "H3",
+                "description": "Géographie → freight",
+                "status": "PARTIAL",
+                "evidence": str(e),
+            }
+        )
 
     # H4 — Boleto = low-value proxy
     try:
-        if "payment_type_cc_flag" in profile_df.columns and "Monetary" in profile_df.columns:
+        if (
+            "payment_type_cc_flag" in profile_df.columns
+            and "Monetary" in profile_df.columns
+        ):
             min_cc_cluster = profile_df.loc[profile_df["payment_type_cc_flag"].idxmin()]
-            global_median_monetary = df_labeled["Monetary"].median() \
-                if "Monetary" in df_labeled.columns else profile_df["Monetary"].median()
+            global_median_monetary = (
+                df_labeled["Monetary"].median()
+                if "Monetary" in df_labeled.columns
+                else profile_df["Monetary"].median()
+            )
             h4_ok = min_cc_cluster["Monetary"] < global_median_monetary
-            results.append({
-                "hypothesis_id": "H4",
-                "description": "Boleto = proxy faible accès au crédit → cluster low-value",
-                "status": "VALIDATED" if h4_ok else "NOT_VALIDATED",
-                "evidence": (
-                    f"Cluster min CC_flag : Monetary médiane = {min_cc_cluster['Monetary']:.1f} "
-                    f"vs médiane globale = {global_median_monetary:.1f}"
-                ),
-            })
+            results.append(
+                {
+                    "hypothesis_id": "H4",
+                    "description": "Boleto = proxy faible accès au crédit → cluster low-value",
+                    "status": "VALIDATED" if h4_ok else "NOT_VALIDATED",
+                    "evidence": (
+                        f"Cluster min CC_flag : Monetary médiane = {min_cc_cluster['Monetary']:.1f} "
+                        f"vs médiane globale = {global_median_monetary:.1f}"
+                    ),
+                }
+            )
         else:
-            results.append({"hypothesis_id": "H4", "description": "Boleto low-value",
-                            "status": "PARTIAL", "evidence": "Colonnes manquantes"})
+            results.append(
+                {
+                    "hypothesis_id": "H4",
+                    "description": "Boleto low-value",
+                    "status": "PARTIAL",
+                    "evidence": "Colonnes manquantes",
+                }
+            )
     except Exception as e:
-        results.append({"hypothesis_id": "H4", "description": "Boleto low-value",
-                        "status": "PARTIAL", "evidence": str(e)})
+        results.append(
+            {
+                "hypothesis_id": "H4",
+                "description": "Boleto low-value",
+                "status": "PARTIAL",
+                "evidence": str(e),
+            }
+        )
 
     # H5 — Delivery delay varies across clusters
     try:
         if "avg_delivery_delay" in profile_df.columns:
-            delay_range = profile_df["avg_delivery_delay"].max() - profile_df["avg_delivery_delay"].min()
+            delay_range = (
+                profile_df["avg_delivery_delay"].max()
+                - profile_df["avg_delivery_delay"].min()
+            )
             h5_ok = delay_range > 5.0
-            results.append({
-                "hypothesis_id": "H5",
-                "description": "La tolérance au délai varie selon le segment",
-                "status": "VALIDATED" if h5_ok else ("PARTIAL" if delay_range > 2 else "NOT_VALIDATED"),
-                "evidence": f"Range délai livraison inter-clusters : {delay_range:.1f} jours",
-            })
+            results.append(
+                {
+                    "hypothesis_id": "H5",
+                    "description": "La tolérance au délai varie selon le segment",
+                    "status": (
+                        "VALIDATED"
+                        if h5_ok
+                        else ("PARTIAL" if delay_range > 2 else "NOT_VALIDATED")
+                    ),
+                    "evidence": f"Range délai livraison inter-clusters : {delay_range:.1f} jours",
+                }
+            )
         else:
-            results.append({"hypothesis_id": "H5", "description": "Délai varie par segment",
-                            "status": "PARTIAL", "evidence": "avg_delivery_delay absent"})
+            results.append(
+                {
+                    "hypothesis_id": "H5",
+                    "description": "Délai varie par segment",
+                    "status": "PARTIAL",
+                    "evidence": "avg_delivery_delay absent",
+                }
+            )
     except Exception as e:
-        results.append({"hypothesis_id": "H5", "description": "Délai varie",
-                        "status": "PARTIAL", "evidence": str(e)})
+        results.append(
+            {
+                "hypothesis_id": "H5",
+                "description": "Délai varie",
+                "status": "PARTIAL",
+                "evidence": str(e),
+            }
+        )
 
     # H6 — Loyal customers (F≥2) form a distinct cluster
     try:
         freq_col = "Frequency" if "Frequency" in profile_df.columns else None
         if freq_col and "Monetary" in profile_df.columns:
-            global_median_monetary = df_labeled["Monetary"].median() \
-                if "Monetary" in df_labeled.columns else profile_df["Monetary"].median()
+            global_median_monetary = (
+                df_labeled["Monetary"].median()
+                if "Monetary" in df_labeled.columns
+                else profile_df["Monetary"].median()
+            )
             loyal_clusters = profile_df[
-                (profile_df[freq_col] >= 2) & (profile_df["Monetary"] > global_median_monetary)
+                (profile_df[freq_col] >= 2)
+                & (profile_df["Monetary"] > global_median_monetary)
             ]
             h6_ok = len(loyal_clusters) >= 1
-            results.append({
-                "hypothesis_id": "H6",
-                "description": "La minorité fidèle (F≥2) forme un cluster distinct",
-                "status": "VALIDATED" if h6_ok else "NOT_VALIDATED",
-                "evidence": (
-                    f"{len(loyal_clusters)} cluster(s) avec Frequency ≥ 2 "
-                    f"ET Monetary > médiane ({global_median_monetary:.1f})"
-                ),
-            })
+            results.append(
+                {
+                    "hypothesis_id": "H6",
+                    "description": "La minorité fidèle (F≥2) forme un cluster distinct",
+                    "status": "VALIDATED" if h6_ok else "NOT_VALIDATED",
+                    "evidence": (
+                        f"{len(loyal_clusters)} cluster(s) avec Frequency ≥ 2 "
+                        f"ET Monetary > médiane ({global_median_monetary:.1f})"
+                    ),
+                }
+            )
         else:
-            results.append({"hypothesis_id": "H6", "description": "Loyal customers distinct",
-                            "status": "PARTIAL", "evidence": "Colonnes Frequency/Monetary manquantes"})
+            results.append(
+                {
+                    "hypothesis_id": "H6",
+                    "description": "Loyal customers distinct",
+                    "status": "PARTIAL",
+                    "evidence": "Colonnes Frequency/Monetary manquantes",
+                }
+            )
     except Exception as e:
-        results.append({"hypothesis_id": "H6", "description": "Loyal customers distinct",
-                        "status": "PARTIAL", "evidence": str(e)})
+        results.append(
+            {
+                "hypothesis_id": "H6",
+                "description": "Loyal customers distinct",
+                "status": "PARTIAL",
+                "evidence": str(e),
+            }
+        )
 
     return pd.DataFrame(results)
 
 
 # J. Persistence
+
 
 def save_model(
     model: Any,
@@ -1298,6 +1518,7 @@ def assign_clusters_to_new_customers(
 
     if feature_cols is None:
         from features import FINAL_FEATURES
+
         feature_cols = FINAL_FEATURES
 
     X_new = df_new[feature_cols].values

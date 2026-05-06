@@ -18,12 +18,22 @@ from streamlit_app.components.charts import (
 )
 from streamlit_app.components.data_store import load_cluster_profile
 from streamlit_app.components.kpi_cards import render_global_kpi_row
-from streamlit_app.styles import OLIST_BLUE, OLIST_YELLOW, SEGMENT_COLORS, apply_olist_theme
+from streamlit_app.styles import (
+    OLIST_BLUE,
+    OLIST_YELLOW,
+    SEGMENT_COLORS,
+    apply_olist_theme,
+)
 
 _HEATMAP_FEATURES = [
-    "Monetary", "Recency", "Frequency",
-    "avg_review_score", "avg_freight_ratio",
-    "avg_delivery_delay", "avg_installments", "CLV_proxy",
+    "Monetary",
+    "Recency",
+    "Frequency",
+    "avg_review_score",
+    "avg_freight_ratio",
+    "avg_delivery_delay",
+    "avg_installments",
+    "CLV_proxy",
 ]
 
 
@@ -195,8 +205,17 @@ def render() -> None:
         cols_filter = st.multiselect(
             "Colonnes :",
             options=profile_df.columns.tolist(),
-            default=["cluster", "n_customers", "pct_customers",
-                     "Monetary", "Recency", "avg_review_score", "CLV_proxy"],
+            default=[
+                "cluster",
+                "n_customers",
+                "pct_customers",
+                "Monetary",
+                "Recency",
+                "avg_review_score",
+                "CLV_proxy",
+            ],
         )
         if cols_filter:
-            st.dataframe(profile_df[cols_filter], use_container_width=True, hide_index=True)
+            st.dataframe(
+                profile_df[cols_filter], use_container_width=True, hide_index=True
+            )

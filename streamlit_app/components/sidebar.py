@@ -10,10 +10,10 @@ PAGE_COMPARISON = "Comparaison"
 PAGE_GUIDE = "Guide du Dashboard"
 
 _PAGES = [
-    {"name": PAGE_OVERVIEW,  "icon": "📊"},
-    {"name": PAGE_SEGMENT,   "icon": "🔍"},
-    {"name": PAGE_COMPARISON,"icon": "⚖️"},
-    {"name": PAGE_GUIDE,     "icon": "📖"},
+    {"name": PAGE_OVERVIEW, "icon": "📊"},
+    {"name": PAGE_SEGMENT, "icon": "🔍"},
+    {"name": PAGE_COMPARISON, "icon": "⚖️"},
+    {"name": PAGE_GUIDE, "icon": "📖"},
 ]
 
 _SEGMENT_LABELS = {

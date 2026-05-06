@@ -11,7 +11,10 @@ _PROJECT_ROOT = Path(__file__).resolve().parents[2]
 if str(_PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(_PROJECT_ROOT))
 
-from streamlit_app.components.charts import bar_algorithm_metrics, table_algorithm_comparison
+from streamlit_app.components.charts import (
+    bar_algorithm_metrics,
+    table_algorithm_comparison,
+)
 from streamlit_app.components.data_store import load_model_comparison
 from streamlit_app.styles import OLIST_BLUE, apply_olist_theme
 
@@ -64,6 +67,7 @@ def render() -> None:
             st.metric("Normalisé", f"{float(best.get('composite_score', 0)):.4f}")
 
         from streamlit_extras.metric_cards import style_metric_cards
+
         style_metric_cards(
             background_color="#FFFFFF",
             border_left_color="#0041FF",
@@ -104,7 +108,9 @@ def render() -> None:
             max_value=float(display_df["composite_score"].max()),
         )
 
-    st.dataframe(display_df, use_container_width=True, hide_index=True, column_config=col_config)
+    st.dataframe(
+        display_df, use_container_width=True, hide_index=True, column_config=col_config
+    )
 
     st.divider()
 
