@@ -37,6 +37,46 @@ Les équipes marketing opèrent sans visibilité claire sur la diversité des pr
 
 ---
 
+## Screenshots du Dashboard
+
+### Vue d'Ensemble — Storytelling & KPIs
+
+![Vue d'ensemble](docs/screenshots/01_overview_hero.png)
+
+*Intro narrative avec les 3 insights critiques (Acheteurs Premium, Dormants Premium, Acheteurs Budget), KPIs globaux, distribution par segment et heatmap des comportements.*
+
+### Vue d'Ensemble — Métriques détaillées
+
+![Vue d'ensemble — KPIs](docs/screenshots/02_overview_kpis.png)
+
+*Distribution des 4 segments, comparaison des métriques clés (Recency, Monetary, Frequency) et heatmap des centroides.*
+
+### Détail Segment
+
+![Détail Segment — Acheteurs Premium](docs/screenshots/03_segment_detail.png)
+
+*Profil radar multi-dimensionnel, carte stratégie marketing, progress bar CLV vs. maximum, et plan d'action généré par Gemini AI.*
+
+### Comparaison des Algorithmes
+
+![Comparaison — Benchmark KMeans / CAH / DBSCAN](docs/screenshots/04_comparison.png)
+
+*Tableau de métriques (Silhouette, Davies-Bouldin, Calinski-Harabasz) et visualisation comparative. UMAP+KMeans k=4 retenu, silhouette 0.449.*
+
+### Guide du Dashboard
+
+![Guide du Dashboard](docs/screenshots/05_guide.png)
+
+*Mode d'emploi complet pour les équipes non techniques : définitions des métriques, lecture des graphiques, priorités par segment.*
+
+### Prédiction Nouveaux Clients
+
+![Prédiction Clients](docs/screenshots/06_prediction.png)
+
+*Upload CSV ou Excel de nouveaux clients — prédiction automatique Budget/Premium, interprétation métier en langage simple et plan d'action en 4 étapes.*
+
+---
+
 ## Architecture du projet
 
 ```
