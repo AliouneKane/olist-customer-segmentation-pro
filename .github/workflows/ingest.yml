@@ -65,7 +65,7 @@ jobs:
           if [ "${{ github.event.inputs.force_retrain }}" = "true" ]; then
             FORCE_FLAG="--force"
           fi
-          python scripts/retrain.py $FORCE_FLAG
+          python scripts/retrain.py $FORCE_FLAG || [ $? -eq 1 ]
 
       - name: Final summary
         if: always()

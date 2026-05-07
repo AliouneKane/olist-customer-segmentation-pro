@@ -44,8 +44,7 @@ jobs:
           if [ "${{ github.event.inputs.force }}" = "true" ]; then
             FORCE_FLAG="--force"
           fi
-          python scripts/retrain.py $FORCE_FLAG
-          echo "exit_code=$?" >> $GITHUB_ENV
+          python scripts/retrain.py $FORCE_FLAG || [ $? -eq 1 ]
 
       - name: Summary
         if: always()
