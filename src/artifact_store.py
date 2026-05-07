@@ -26,7 +26,10 @@ _PROCESSED_DIR = _PROJECT_ROOT / "data" / "processed"
 _ARTIFACT_FILES: list[tuple[Path, str]] = [
     (_MODELS_DIR / "standard_scaler.pkl", "models/standard_scaler.pkl"),
     (_PROCESSED_DIR / "cluster_profile.parquet", "data/cluster_profile.parquet"),
-    (_PROCESSED_DIR / "customer_features_labeled.parquet", "data/customer_features_labeled.parquet"),
+    (
+        _PROCESSED_DIR / "customer_features_labeled.parquet",
+        "data/customer_features_labeled.parquet",
+    ),
     (_PROCESSED_DIR / "model_comparison.csv", "data/model_comparison.csv"),
     (_PROCESSED_DIR / "retrain_log.json", "data/retrain_log.json"),
 ]
@@ -39,6 +42,7 @@ def _get_client():
     """Return an authenticated GCS client."""
     try:
         from google.cloud import storage
+
         return storage.Client(project=os.getenv("GCP_PROJECT"))
     except ImportError as exc:
         raise ImportError(
@@ -64,10 +68,14 @@ def upload_artifacts(best_k: int) -> None:
 
     files_to_upload = list(_ARTIFACT_FILES)
     files_to_upload += [
-        (_MODELS_DIR / f"best_clustering_kmeans_k{best_k}.pkl",
-         f"models/best_clustering_kmeans_k{best_k}.pkl"),
-        (_MODELS_DIR / f"best_clustering_kmeans_k{best_k}.json",
-         f"models/best_clustering_kmeans_k{best_k}.json"),
+        (
+            _MODELS_DIR / f"best_clustering_kmeans_k{best_k}.pkl",
+            f"models/best_clustering_kmeans_k{best_k}.pkl",
+        ),
+        (
+            _MODELS_DIR / f"best_clustering_kmeans_k{best_k}.json",
+            f"models/best_clustering_kmeans_k{best_k}.json",
+        ),
     ]
 
     for local_path, gcs_path in files_to_upload:
@@ -76,7 +84,9 @@ def upload_artifacts(best_k: int) -> None:
             continue
         blob = bucket.blob(gcs_path)
         blob.upload_from_filename(str(local_path))
-        logger.info("Uploaded %s → gs://%s/%s", local_path.name, _bucket_name(), gcs_path)
+        logger.info(
+            "Uploaded %s → gs://%s/%s", local_path.name, _bucket_name(), gcs_path
+        )
 
     logger.info("All artifacts uploaded to gs://%s", _bucket_name())
 
@@ -118,6 +128,7 @@ def download_artifacts() -> bool:
 
         if local_path.exists() and gcs_updated:
             import datetime
+
             local_mtime = datetime.datetime.fromtimestamp(
                 local_path.stat().st_mtime, tz=datetime.timezone.utc
             )
@@ -126,7 +137,9 @@ def download_artifacts() -> bool:
                 continue
 
         blob.download_to_filename(str(local_path))
-        logger.info("Downloaded gs://%s/%s → %s", _bucket_name(), blob.name, local_path.name)
+        logger.info(
+            "Downloaded gs://%s/%s → %s", _bucket_name(), blob.name, local_path.name
+        )
         updated = True
 
     return updated
@@ -142,7 +155,8 @@ def get_gcs_metadata() -> dict | None:
         client = _get_client()
         bucket = client.bucket(_bucket_name())
         blobs = [
-            b for b in bucket.list_blobs(prefix=_MODEL_GCS_PREFIX)
+            b
+            for b in bucket.list_blobs(prefix=_MODEL_GCS_PREFIX)
             if b.name.endswith(".json")
         ]
         if not blobs:

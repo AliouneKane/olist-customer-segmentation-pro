@@ -59,9 +59,7 @@ def _build_prompt(cluster_id: int, profile_row: dict) -> str:
 
     segment_name = SEGMENT_NAMES.get(cluster_id, f"Cluster {cluster_id}")
     top_cats = ", ".join(SEGMENT_TOP_CATEGORIES.get(cluster_id, []))
-    top_prods = "\n".join(
-        f"  - {p}" for p in SEGMENT_PRODUCT_RECS.get(cluster_id, [])
-    )
+    top_prods = "\n".join(f"  - {p}" for p in SEGMENT_PRODUCT_RECS.get(cluster_id, []))
 
     return f"""Tu es responsable CRM et e-merchandising chez Olist, la principale marketplace brésilienne.
 

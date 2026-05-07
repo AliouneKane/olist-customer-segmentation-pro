@@ -42,7 +42,9 @@ def pie_segment_distribution(profile_df: pd.DataFrame) -> go.Figure:
 def bar_segment_comparison(profile_df: pd.DataFrame, metric_col: str) -> go.Figure:
     """Bar chart comparing all segments on metric_col."""
     df = profile_df.copy()
-    df["segment_label"] = df["cluster"].apply(lambda c: SEGMENT_NAMES.get(int(c), f"Cluster {c}"))
+    df["segment_label"] = df["cluster"].apply(
+        lambda c: SEGMENT_NAMES.get(int(c), f"Cluster {c}")
+    )
 
     fig = px.bar(
         df,
@@ -163,7 +165,9 @@ def heatmap_cluster_features(
         return go.Figure()
 
     z = profile_df[cols].values
-    y_labels = [SEGMENT_NAMES.get(int(c), f"Cluster {c}") for c in profile_df["cluster"]]
+    y_labels = [
+        SEGMENT_NAMES.get(int(c), f"Cluster {c}") for c in profile_df["cluster"]
+    ]
 
     fig = go.Figure(
         go.Heatmap(

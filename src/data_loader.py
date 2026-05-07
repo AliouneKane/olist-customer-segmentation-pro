@@ -33,6 +33,7 @@ def get_db_engine() -> Engine:
         # Strip unsupported psycopg2 params (e.g. channel_binding)
         if "channel_binding" in database_url:
             from urllib.parse import urlparse, urlencode, parse_qs, urlunparse
+
             parsed = urlparse(database_url)
             params = parse_qs(parsed.query)
             params.pop("channel_binding", None)

@@ -40,6 +40,7 @@ inject_css()
 if "artifacts_synced" not in st.session_state:
     try:
         from src.artifact_store import download_artifacts
+
         download_artifacts()
     except Exception:
         pass

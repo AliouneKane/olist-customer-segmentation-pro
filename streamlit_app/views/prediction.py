@@ -29,7 +29,12 @@ from streamlit_app.components.segment_recommendations import (
     SEGMENT_NAMES,
     SEGMENT_TOP_CATEGORIES,
 )
-from streamlit_app.styles import OLIST_BLUE, OLIST_YELLOW, SEGMENT_COLORS, apply_olist_theme
+from streamlit_app.styles import (
+    OLIST_BLUE,
+    OLIST_YELLOW,
+    SEGMENT_COLORS,
+    apply_olist_theme,
+)
 
 _MODELS_DIR = _PROJECT_ROOT / "models"
 _PROCESSED = _PROJECT_ROOT / "data" / "processed"
@@ -57,22 +62,48 @@ _REQUIRED_INPUT: list[str] = [
 ]
 
 _STATE_REGION: dict[str, str] = {
-    "AC": "Norte", "AM": "Norte", "AP": "Norte", "PA": "Norte",
-    "RO": "Norte", "RR": "Norte", "TO": "Norte",
-    "AL": "Nordeste", "BA": "Nordeste", "CE": "Nordeste", "MA": "Nordeste",
-    "PB": "Nordeste", "PE": "Nordeste", "PI": "Nordeste", "RN": "Nordeste",
-    "SE": "Nordeste", "DF": "Centro-Oeste", "GO": "Centro-Oeste",
-    "MS": "Centro-Oeste", "MT": "Centro-Oeste",
-    "ES": "Sudeste", "MG": "Sudeste", "RJ": "Sudeste", "SP": "Sudeste",
-    "PR": "Sul", "RS": "Sul", "SC": "Sul",
+    "AC": "Norte",
+    "AM": "Norte",
+    "AP": "Norte",
+    "PA": "Norte",
+    "RO": "Norte",
+    "RR": "Norte",
+    "TO": "Norte",
+    "AL": "Nordeste",
+    "BA": "Nordeste",
+    "CE": "Nordeste",
+    "MA": "Nordeste",
+    "PB": "Nordeste",
+    "PE": "Nordeste",
+    "PI": "Nordeste",
+    "RN": "Nordeste",
+    "SE": "Nordeste",
+    "DF": "Centro-Oeste",
+    "GO": "Centro-Oeste",
+    "MS": "Centro-Oeste",
+    "MT": "Centro-Oeste",
+    "ES": "Sudeste",
+    "MG": "Sudeste",
+    "RJ": "Sudeste",
+    "SP": "Sudeste",
+    "PR": "Sul",
+    "RS": "Sul",
+    "SC": "Sul",
 }
 
 _REGION_SCORE: dict[str, int] = {
-    "Sul": 1, "Sudeste": 2, "Centro-Oeste": 3, "Nordeste": 4, "Norte": 5,
+    "Sul": 1,
+    "Sudeste": 2,
+    "Centro-Oeste": 3,
+    "Nordeste": 4,
+    "Norte": 5,
 }
 
 _ICON_MAP: dict[str, str] = {
-    "bi-cart": "🛒", "bi-hourglass": "⏳", "bi-star": "⭐", "bi-moon-stars": "🌙",
+    "bi-cart": "🛒",
+    "bi-hourglass": "⏳",
+    "bi-star": "⭐",
+    "bi-moon-stars": "🌙",
 }
 
 
@@ -101,9 +132,7 @@ def _load_predictor() -> tuple | None:
             [X_scaled[labeled["cluster"].values == c].mean(axis=0) for c in cluster_ids]
         )
 
-        baseline_pct = (
-            labeled["cluster"].value_counts(normalize=True).sort_index()
-        )
+        baseline_pct = labeled["cluster"].value_counts(normalize=True).sort_index()
 
         return scaler, centroids, cluster_ids, baseline_pct
 
@@ -139,7 +168,9 @@ def _engineer_features(df: pd.DataFrame) -> pd.DataFrame | None:
     if "region_freight_score" not in out.columns:
         if "customer_state" in out.columns:
             region = out["customer_state"].str.upper().map(_STATE_REGION)
-            out["region_freight_score"] = region.map(_REGION_SCORE).fillna(3).astype(int)
+            out["region_freight_score"] = (
+                region.map(_REGION_SCORE).fillna(3).astype(int)
+            )
         else:
             out["region_freight_score"] = 3
 
@@ -295,7 +326,13 @@ def _insight_card(cluster_id: int, new_pct: float, base_pct: float) -> None:
 def _csv_template() -> bytes:
     template = pd.DataFrame(
         {
-            "customer_id": ["CLIENT_001", "CLIENT_002", "CLIENT_003", "CLIENT_004", "CLIENT_005"],
+            "customer_id": [
+                "CLIENT_001",
+                "CLIENT_002",
+                "CLIENT_003",
+                "CLIENT_004",
+                "CLIENT_005",
+            ],
             "Recency": [30, 120, 250, 45, 310],
             "Monetary": [185.0, 68.0, 155.0, 72.0, 200.0],
             "Frequency": [1, 1, 2, 1, 1],
@@ -303,7 +340,13 @@ def _csv_template() -> bytes:
             "avg_freight_ratio": [0.12, 0.28, 0.18, 0.35, 0.10],
             "avg_delivery_delay": [-2.0, 1.5, 3.0, 0.0, -5.0],
             "avg_installments": [2.0, 1.0, 3.0, 1.0, 4.0],
-            "payment_type": ["credit_card", "boleto", "credit_card", "boleto", "credit_card"],
+            "payment_type": [
+                "credit_card",
+                "boleto",
+                "credit_card",
+                "boleto",
+                "credit_card",
+            ],
             "customer_state": ["SP", "BA", "RJ", "CE", "SC"],
         }
     )
@@ -474,10 +517,18 @@ def render() -> None:
     pct_premium = n_premium / n_total * 100
     pct_budget = n_budget / n_total * 100
 
-    avg_prem = float(df_result.loc[mask_premium, "Monetary"].mean()) if n_premium > 0 else 0.0
-    avg_bud = float(df_result.loc[mask_budget, "Monetary"].mean()) if n_budget > 0 else 0.0
-    rev_prem = float(df_result.loc[mask_premium, "Monetary"].sum()) if n_premium > 0 else 0.0
-    rev_bud = float(df_result.loc[mask_budget, "Monetary"].sum()) if n_budget > 0 else 0.0
+    avg_prem = (
+        float(df_result.loc[mask_premium, "Monetary"].mean()) if n_premium > 0 else 0.0
+    )
+    avg_bud = (
+        float(df_result.loc[mask_budget, "Monetary"].mean()) if n_budget > 0 else 0.0
+    )
+    rev_prem = (
+        float(df_result.loc[mask_premium, "Monetary"].sum()) if n_premium > 0 else 0.0
+    )
+    rev_bud = (
+        float(df_result.loc[mask_budget, "Monetary"].sum()) if n_budget > 0 else 0.0
+    )
     rev_total = rev_prem + rev_bud
 
     _C_PREM = SEGMENT_COLORS[2]
@@ -746,14 +797,19 @@ def render() -> None:
             use_container_width=True,
         )
     with col_dl2:
-        summary = pd.DataFrame({
-            "Profil": ["Premium (C2+C3)", "Budget (C0+C1)"],
-            "Nb clients": [n_premium, n_budget],
-            "% du total": [f"{pct_premium:.1f}%", f"{pct_budget:.1f}%"],
-            "Panier moyen (BRL)": [f"{avg_prem:.0f}", f"{avg_bud:.0f}"],
-            "Revenue total (BRL)": [f"{rev_prem:,.0f}", f"{rev_bud:,.0f}"],
-            "% du revenue": [f"{rev_prem/rev_total*100:.0f}%", f"{rev_bud/rev_total*100:.0f}%"],
-        })
+        summary = pd.DataFrame(
+            {
+                "Profil": ["Premium (C2+C3)", "Budget (C0+C1)"],
+                "Nb clients": [n_premium, n_budget],
+                "% du total": [f"{pct_premium:.1f}%", f"{pct_budget:.1f}%"],
+                "Panier moyen (BRL)": [f"{avg_prem:.0f}", f"{avg_bud:.0f}"],
+                "Revenue total (BRL)": [f"{rev_prem:,.0f}", f"{rev_bud:,.0f}"],
+                "% du revenue": [
+                    f"{rev_prem/rev_total*100:.0f}%",
+                    f"{rev_bud/rev_total*100:.0f}%",
+                ],
+            }
+        )
         st.download_button(
             label="⬇️ Résumé Budget / Premium (CSV)",
             data=summary.to_csv(index=False).encode("utf-8"),
