@@ -18,6 +18,7 @@ CLAUDE.md
 AGENTS.md
 fix_cell.py
 restore_nb.py
+notebooks/generate_notebook.py
 .claude/
 
 # ── Python ────────────────────────────────────────────────────────────────────
