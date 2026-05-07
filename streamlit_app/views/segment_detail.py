@@ -15,9 +15,12 @@ from streamlit_app.components.charts import bar_segment_comparison, radar_chart
 from streamlit_app.components.data_store import load_cluster_profile
 from streamlit_app.components.segment_recommendations import (
     RECOMMENDATIONS,
+    SEGMENT_ADS_TARGETING,
     SEGMENT_AVATARS,
     SEGMENT_ICONS,
     SEGMENT_NAMES,
+    SEGMENT_PRODUCT_RECS,
+    SEGMENT_TOP_CATEGORIES,
 )
 from streamlit_app.components.kpi_cards import render_segment_kpi_row
 from streamlit_app.styles import (
@@ -211,6 +214,94 @@ def render(cluster_id: int) -> None:
         st.plotly_chart(fig, use_container_width=True)
     with col_rec:
         _recommendation_card(cluster_id)
+
+    st.divider()
+
+    # ── Produits recommandés + Ciblage publicitaire ──────────────────────────
+    col_prod, col_ads = st.columns(2, gap="large")
+
+    with col_prod:
+        st.markdown(
+            f"<div style='font-size:1rem; font-weight:700; color:{OLIST_BLUE}; "
+            "margin-bottom:0.75rem;'>Produits à mettre en avant</div>",
+            unsafe_allow_html=True,
+        )
+        cats = SEGMENT_TOP_CATEGORIES.get(cluster_id, [])
+        cat_tags = "".join(
+            f"<span style='display:inline-block; background:{color}15; "
+            f"color:{color}; border:1px solid {color}40; border-radius:20px; "
+            f"padding:2px 10px; font-size:0.75rem; font-weight:600; "
+            f"margin:2px 4px 2px 0;'>{c}</span>"
+            for c in cats
+        )
+        st.markdown(
+            f"<div style='margin-bottom:10px;'>{cat_tags}</div>",
+            unsafe_allow_html=True,
+        )
+        prods = SEGMENT_PRODUCT_RECS.get(cluster_id, [])
+        prod_html = "".join(
+            f"<li style='margin-bottom:7px; color:#374151; font-size:0.84rem; "
+            f"line-height:1.5;'>{p}</li>"
+            for p in prods
+        )
+        st.markdown(
+            f"<ul style='padding-left:1.1rem; margin:0;'>{prod_html}</ul>",
+            unsafe_allow_html=True,
+        )
+
+    with col_ads:
+        targeting = SEGMENT_ADS_TARGETING.get(cluster_id, {})
+        st.markdown(
+            f"<div style='font-size:1rem; font-weight:700; color:{OLIST_BLUE}; "
+            "margin-bottom:0.75rem;'>Ciblage publicitaire</div>",
+            unsafe_allow_html=True,
+        )
+
+        def _ads_row(label: str, value: str) -> str:
+            return (
+                f"<div style='display:flex; gap:8px; margin-bottom:7px; "
+                f"font-size:0.83rem; line-height:1.45;'>"
+                f"<span style='font-weight:700; color:#6b7280; min-width:90px; "
+                f"flex-shrink:0;'>{label}</span>"
+                f"<span style='color:#212121;'>{value}</span></div>"
+            )
+
+        fb_list = "".join(
+            f"<li style='font-size:0.83rem; color:#374151; margin-bottom:4px;'>{i}</li>"
+            for i in targeting.get("interets_facebook", [])
+        )
+        google_list = "".join(
+            f"<li style='font-size:0.83rem; color:#374151; margin-bottom:4px;'>{i}</li>"
+            for i in targeting.get("audiences_google", [])
+        )
+
+        st.markdown(
+            f"""
+            <div style="background:#FFFFFF; border:1px solid #e5e7eb;
+                        border-top:4px solid {color}; border-radius:8px;
+                        padding:1rem; box-shadow:0 1px 3px #d1d5db;">
+                {_ads_row("Age", targeting.get("age", "—"))}
+                {_ads_row("Genre", targeting.get("genre", "—"))}
+                {_ads_row("Localisation", targeting.get("localisation", "—"))}
+                {_ads_row("Revenu", targeting.get("revenu", "—"))}
+                {_ads_row("Comportement", targeting.get("comportements", "—"))}
+                <div style="margin-top:10px; margin-bottom:4px; font-size:0.75rem;
+                            font-weight:700; color:#9ca3af; text-transform:uppercase;
+                            letter-spacing:0.06em;">Facebook Ads — Intérêts</div>
+                <ul style="padding-left:1.1rem; margin:0 0 8px 0;">{fb_list}</ul>
+                <div style="margin-bottom:4px; font-size:0.75rem; font-weight:700;
+                            color:#9ca3af; text-transform:uppercase;
+                            letter-spacing:0.06em;">Google Ads — Audiences</div>
+                <ul style="padding-left:1.1rem; margin:0 0 8px 0;">{google_list}</ul>
+                <div style="background:{color}0d; border-left:3px solid {color};
+                            padding:7px 10px; border-radius:0 6px 6px 0;
+                            font-size:0.8rem; color:#374151; font-style:italic;">
+                    Message clé : {targeting.get("message_cle", "—")}
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
 
     st.divider()
 

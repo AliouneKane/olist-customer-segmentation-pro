@@ -1,0 +1,11 @@
+order_id,customer_id,customer_unique_id,customer_state,order_purchase_date,order_delivered_date,order_estimated_delivery_date,price,freight_value,payment_type,payment_installments,payment_value,review_score
+demo-ord-001,demo-cust-001,demo-uniq-001,SP,2026-05-01 10:00:00,2026-05-08 14:00:00,2026-05-10 00:00:00,320.00,18.50,credit_card,3,338.50,5
+demo-ord-002,demo-cust-002,demo-uniq-002,RJ,2026-05-02 11:30:00,2026-05-12 09:00:00,2026-05-11 00:00:00,89.90,22.00,boleto,1,111.90,3
+demo-ord-003,demo-cust-003,demo-uniq-003,MG,2026-05-03 09:15:00,2026-05-09 16:00:00,2026-05-12 00:00:00,450.00,12.00,credit_card,6,462.00,4
+demo-ord-004,demo-cust-004,demo-uniq-004,BA,2026-05-04 14:00:00,2026-05-18 10:00:00,2026-05-15 00:00:00,65.00,35.00,credit_card,1,100.00,2
+demo-ord-005,demo-cust-005,demo-uniq-005,SP,2026-05-05 08:00:00,2026-05-10 11:00:00,2026-05-12 00:00:00,1200.00,25.00,credit_card,12,1225.00,5
+demo-ord-006,demo-cust-006,demo-uniq-006,RS,2026-05-06 16:45:00,2026-05-13 15:00:00,2026-05-14 00:00:00,199.90,15.00,debit_card,1,214.90,4
+demo-ord-007,demo-cust-007,demo-uniq-007,CE,2026-05-07 12:00:00,2026-05-20 09:00:00,2026-05-16 00:00:00,78.00,42.00,boleto,1,120.00,1
+demo-ord-008,demo-cust-008,demo-uniq-008,PR,2026-05-08 10:30:00,2026-05-14 17:00:00,2026-05-15 00:00:00,560.00,20.00,credit_card,4,580.00,5
+demo-ord-009,demo-cust-009,demo-uniq-009,SP,2026-05-09 09:00:00,2026-05-15 13:00:00,2026-05-17 00:00:00,95.00,10.00,voucher,1,105.00,3
+demo-ord-010,demo-cust-010,demo-uniq-010,AM,2026-05-10 11:00:00,2026-05-25 08:00:00,2026-05-20 00:00:00,230.00,68.00,credit_card,2,298.00,2

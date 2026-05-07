@@ -103,33 +103,42 @@ def render() -> None:
         " margin-bottom:0.75rem;'>💡 Ce que révèle la segmentation</h3>",
         unsafe_allow_html=True,
     )
-    k1, k2, k3 = st.columns(3, gap="medium")
+    k1, k2, k3, k4 = st.columns(4, gap="medium")
     with k1:
         _story_card(
             "⭐",
-            "24 % = votre cible premium à convertir",
-            "Les Acheteurs Premium (Cluster 2) ont commandé il y a ~4 mois avec un panier "
-            "de <strong>180 BRL</strong>. Une seule commande à ce stade — "
-            "un email de nurturing ciblé peut doubler leur CLV.",
+            "24 % — Cible premium à convertir",
+            "Les <strong>Acheteurs Premium</strong> (C2) ont commandé il y a ~4 mois avec "
+            "un panier de <strong>180 BRL</strong>. Beauté haut de gamme, tech, mode. "
+            "Un email de nurturing à J+30 peut doubler leur CLV.",
             color=SEGMENT_COLORS[2],
         )
     with k2:
         _story_card(
             "🌙",
-            "23 % de dormants à fort potentiel",
-            "Les Dormants Premium (Cluster 3) ont dépensé ~160 BRL mais sont "
-            "inactifs depuis <strong>367 jours</strong>. Ils ont prouvé leur "
-            "capacité à dépenser — une réactivation urgente avant la perte définitive.",
+            "23 % — Dormants à fort potentiel",
+            "Les <strong>Dormants Premium</strong> (C3) ont dépensé ~160 BRL mais sont "
+            "inactifs depuis <strong>367 jours</strong>. Électronique, mobilier, bijoux. "
+            "Une offre exclusive –20 % peut les ramener avant la perte définitive.",
             color=SEGMENT_COLORS[3],
         )
     with k3:
         _story_card(
             "🛒",
-            "28 % = volume et récurrence à activer",
-            "Les Acheteurs Budget (Cluster 0) sont récents (~4 mois) mais économes "
-            "(panier ~64 BRL). Ce segment de <strong>volume représente 28%</strong> "
-            "de la base — des promotions ciblées peuvent augmenter la fréquence.",
+            "28 % — Volume et récurrence à activer",
+            "Les <strong>Acheteurs Budget</strong> (C0) sont récents (~4 mois) mais économes "
+            "(panier ~64 BRL). Beauté, maison, enfants. <strong>Premier groupe de la base</strong> "
+            "— des promotions hebdomadaires augmentent la fréquence d'achat.",
             color=SEGMENT_COLORS[0],
+        )
+    with k4:
+        _story_card(
+            "⏳",
+            "25 % — Dormants à relancer prudemment",
+            "Les <strong>Dormants Budget</strong> (C1) sont inactifs depuis ~292 jours "
+            "et dépensaient peu (~72 BRL). Nordeste et Norte. "
+            "<strong>ROI faible</strong> — un simple email automatisé suffit, sans remise élevée.",
+            color=SEGMENT_COLORS[1],
         )
 
     st.markdown("<div style='margin-top:1.5rem;'></div>", unsafe_allow_html=True)

@@ -9,6 +9,8 @@ mlruns/
 # ── Secrets ────────────────────────────────────────────────────────────────────
 .env
 *.env
+gcp-key.json
+*-key.json
 
 # ── Project internal files (not for public repo) ──────────────────────────────
 claude.md

@@ -11,6 +11,8 @@ import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
+from streamlit_app.components.segment_recommendations import SEGMENT_NAMES
+
 # Consistent color palette across all charts
 _PALETTE = px.colors.qualitative.Set2
 
@@ -20,7 +22,7 @@ _PALETTE = px.colors.qualitative.Set2
 
 def pie_segment_distribution(profile_df: pd.DataFrame) -> go.Figure:
     """Donut chart of customer distribution across segments."""
-    labels = [f"Cluster {c}" for c in profile_df["cluster"]]
+    labels = [SEGMENT_NAMES.get(int(c), f"Cluster {c}") for c in profile_df["cluster"]]
     fig = px.pie(
         profile_df,
         names=labels,
@@ -40,7 +42,7 @@ def pie_segment_distribution(profile_df: pd.DataFrame) -> go.Figure:
 def bar_segment_comparison(profile_df: pd.DataFrame, metric_col: str) -> go.Figure:
     """Bar chart comparing all segments on metric_col."""
     df = profile_df.copy()
-    df["segment_label"] = df["cluster"].apply(lambda c: f"Cluster {c}")
+    df["segment_label"] = df["cluster"].apply(lambda c: SEGMENT_NAMES.get(int(c), f"Cluster {c}"))
 
     fig = px.bar(
         df,
@@ -129,7 +131,7 @@ def radar_chart(
                 r=values,
                 theta=categories,
                 fill="toself" if is_selected else "none",
-                name=f"Cluster {cluster_id}",
+                name=SEGMENT_NAMES.get(cluster_id, f"Cluster {cluster_id}"),
                 line={
                     "color": _PALETTE[cluster_id % len(_PALETTE)],
                     "width": 3 if is_selected else 1,
@@ -161,7 +163,7 @@ def heatmap_cluster_features(
         return go.Figure()
 
     z = profile_df[cols].values
-    y_labels = [f"Cluster {c}" for c in profile_df["cluster"]]
+    y_labels = [SEGMENT_NAMES.get(int(c), f"Cluster {c}") for c in profile_df["cluster"]]
 
     fig = go.Figure(
         go.Heatmap(

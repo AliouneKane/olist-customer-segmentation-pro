@@ -20,10 +20,40 @@ SEGMENT_NAMES: dict[int, str] = {
 }
 
 SEGMENT_AVATARS: dict[int, str] = {
-    0: "Client récent (~4 mois) mais économe : panier modeste (~64 BRL), première commande. Représente 28% de la base — cœur de volume à animer avec des promotions régulières et un programme de fidélité.",
-    1: "Client inactif à faible valeur : panier modeste (~72 BRL) et inactif depuis ~10 mois. Le coût de réactivation risque de dépasser la valeur attendue — réserver les actions à bas coût uniquement.",
-    2: "Client idéal : récent (~4 mois) et panier élevé (~180 BRL). C'est votre cœur de cible premium. Un suivi post-achat bien ciblé peut transformer ce premier achat en relation durable à forte valeur.",
-    3: "Ancien client à valeur : panier élevé (~160 BRL) mais inactif depuis plus d'un an (367 jours). Ces clients ont déjà prouvé leur capacité à dépenser — une réactivation ciblée peut récupérer ce potentiel.",
+    0: (
+        "Ce sont des clients qui ont acheté récemment (il y a environ 4 mois) mais qui dépensent peu "
+        "(environ 64 BRL par commande). Ce sont souvent des femmes ou des hommes entre 22 et 40 ans, "
+        "avec un budget serré, qui habitent surtout à São Paulo, Minas Gerais ou Rio de Janeiro. "
+        "Ils achètent surtout des produits de beauté, des articles pour la maison et des jouets pour enfants. "
+        "Ils aiment les promotions et cherchent toujours le meilleur prix. "
+        "C'est notre plus grand groupe de clients — il faut les garder avec des offres régulières."
+    ),
+    1: (
+        "Ces clients ont arrêté d'acheter depuis environ 10 mois et dépensaient peu (72 BRL en moyenne). "
+        "Ce sont souvent des personnes de 30 à 55 ans, avec peu de moyens, "
+        "qui habitent dans le Nordeste ou dans le Nord du Brésil — des régions où les frais de livraison "
+        "sont élevés, ce qui les décourage souvent de recommander. "
+        "Ils achetaient surtout des articles de maison basiques et des vêtements pas chers. "
+        "Il ne faut pas dépenser trop pour les relancer — juste un email simple suffit."
+    ),
+    2: (
+        "Ce sont nos meilleurs clients actifs : ils ont acheté il y a environ 4 mois "
+        "et dépensent beaucoup (180 BRL par commande). "
+        "C'est souvent une femme entre 25 et 45 ans, ou un homme passionné de technologie, "
+        "avec un bon salaire, qui habite à São Paulo, Rio ou dans le Sud du pays. "
+        "Ils paient par carte de crédit et achètent des produits de beauté haut de gamme, "
+        "des téléphones, des vêtements de marque. "
+        "Ce groupe a le plus grand potentiel — il faut le chouchouter et lui proposer des offres exclusives."
+    ),
+    3: (
+        "Ces clients dépensaient bien (160 BRL par commande) mais n'ont plus rien acheté depuis plus d'un an. "
+        "Ce sont souvent des hommes ou des femmes de 30 à 52 ans avec un bon salaire, "
+        "habitant principalement à São Paulo ou Rio de Janeiro. "
+        "Ils achetaient surtout de l'électronique cher, du mobilier et des montres ou bijoux. "
+        "Ils payaient par carte de crédit en plusieurs fois. "
+        "Ils sont partis probablement parce que personne ne les a relancés. "
+        "Une belle offre de retour peut convaincre une bonne partie d'entre eux de revenir."
+    ),
 }
 
 RECOMMENDATIONS: dict[int, list[str]] = {
@@ -51,6 +81,126 @@ RECOMMENDATIONS: dict[int, list[str]] = {
         "Offre dégressive : –15% à J+0, –20% à J+14, –25% à J+28 pour créer l'urgence",
         "Après 90 jours sans réaction : basculer vers canal SMS ou exclure pour préserver le budget CRM",
     ],
+}
+
+# Top product categories per cluster (dominant tiers from UMAP+KMeans labeling)
+SEGMENT_TOP_CATEGORIES: dict[int, list[str]] = {
+    0: ["Beauté & Santé", "Maison & Ameublement", "Enfants & Loisirs"],
+    1: ["Maison & Ameublement", "Mode & Accessoires", "Loisirs & Culture"],
+    2: ["Beauté & Santé", "Électronique & Technologie", "Mode & Accessoires"],
+    3: ["Électronique & Technologie", "Maison & Ameublement", "Mode & Accessoires"],
+}
+
+# Specific product recommendations within dominant categories
+SEGMENT_PRODUCT_RECS: dict[int, list[str]] = {
+    0: [
+        "Cosmétiques entrée de gamme (crèmes, soins corps, maquillage basique)",
+        "Articles ménagers essentiels (ustensiles de cuisine, rangement, nettoyage)",
+        "Jouets et articles bébé en promotion (peluches, jouets d'éveil, couches)",
+        "Livres pratiques et papeterie (auto-formation, scolaire)",
+    ],
+    1: [
+        "Articles de maison basiques (linge de maison, vaisselle, petit électroménager)",
+        "Accessoires mode abordables (sacs, ceintures, bijoux fantaisie)",
+        "Livres et DVDs d'occasion ou en promotion",
+        "Outils et fournitures bricolage entrée de gamme",
+    ],
+    2: [
+        "Soins beauté premium (sérums, parfums, coffrets cadeau cosmétiques)",
+        "Smartphones et accessoires tech récents (écouteurs, coques, montres connectées)",
+        "Vêtements et chaussures de marque (mode féminine et masculine tendance)",
+        "Montres et bijoux (cadeaux, accessoires lifestyle)",
+    ],
+    3: [
+        "Électronique haut de gamme (TV, ordinateurs, appareils photo)",
+        "Mobilier et décoration premium (canapé, luminaires, art mural)",
+        "Montres et bijoux de valeur (cadeaux d'exception)",
+        "Accessoires tech premium (tablettes, audio haute fidélité)",
+    ],
+}
+
+# Socio-demographic & ad targeting profiles for Facebook Ads / Google Ads
+SEGMENT_ADS_TARGETING: dict[int, dict] = {
+    0: {
+        "age": "22 – 40 ans",
+        "genre": "Femme (dominante) · Homme",
+        "localisation": "Sudeste (SP, MG, RJ) · Toutes régions urbaines",
+        "revenu": "Classe C — R$ 2 000 – 5 000 / mois",
+        "interets_facebook": [
+            "Promotions et bons plans",
+            "Beauté et soins personnels",
+            "Shopping en ligne",
+            "Famille et enfants",
+        ],
+        "audiences_google": [
+            "In-market : Beauty & Personal Care",
+            "In-market : Baby & Children Products",
+            "In-market : Home & Garden",
+            "Affinité : Bargain Hunters",
+        ],
+        "comportements": "Acheteurs occasionnels · Sensibles au prix · Mobile-first",
+        "message_cle": "Prix bas garantis · Livraison rapide · Offres flash",
+    },
+    1: {
+        "age": "30 – 55 ans",
+        "genre": "Tous",
+        "localisation": "Nordeste (BA, CE, PE) · Norte (PA, AM) · Intérieur",
+        "revenu": "Classe C / D — R$ 1 000 – 3 000 / mois",
+        "interets_facebook": [
+            "Achats en ligne",
+            "Comparateurs de prix",
+            "Maison et décoration",
+            "Mode et accessoires",
+        ],
+        "audiences_google": [
+            "In-market : Home Furnishings",
+            "In-market : Apparel & Accessories",
+            "Affinité : Value Shoppers",
+            "Remarketing — inactifs 6–18 mois",
+        ],
+        "comportements": "Inactifs depuis 6–18 mois · Boleto dominant · Peu d'installments",
+        "message_cle": "On vous a manqué · Offre de retour · Fret réduit pour votre région",
+    },
+    2: {
+        "age": "25 – 45 ans",
+        "genre": "Femme (Beauté) · Homme (Tech) · Mix",
+        "localisation": "Sudeste (SP, RJ) · Sul (SC, PR) · Capitales",
+        "revenu": "Classe A / B — R$ 5 000+ / mois",
+        "interets_facebook": [
+            "Lifestyle et tendances",
+            "Technologie et gadgets",
+            "Beauté et soins premium",
+            "Mode et shopping",
+        ],
+        "audiences_google": [
+            "In-market : Consumer Electronics",
+            "In-market : Luxury Beauty",
+            "In-market : Clothing & Accessories",
+            "Affinité : Technophiles · Fashion & Style",
+        ],
+        "comportements": "Acheteurs actifs · CB avec installments · Affinité marques premium",
+        "message_cle": "Exclusivité · Qualité premium · Livraison express · Programme VIP",
+    },
+    3: {
+        "age": "30 – 52 ans",
+        "genre": "Mix — légère dominance masculine (Électronique)",
+        "localisation": "Sudeste (SP, RJ, MG dominant) · Sul",
+        "revenu": "Classe B — R$ 3 000 – 7 000 / mois",
+        "interets_facebook": [
+            "Technologie et informatique",
+            "Maison et décoration haut de gamme",
+            "Lifestyle et voyages",
+            "Montres et bijoux",
+        ],
+        "audiences_google": [
+            "In-market : Computers & Peripherals",
+            "In-market : Home Improvement",
+            "In-market : Jewelry & Watches",
+            "Remarketing — inactifs 12–24 mois · panier élevé",
+        ],
+        "comportements": "Ex-acheteurs premium · Inactifs 12–24 mois · CB installments",
+        "message_cle": "Offre exclusive de retour · Nouveautés depuis votre dernier achat",
+    },
 }
 
 # Bootstrap color names (used by the legacy Dash build if ever reactivated)

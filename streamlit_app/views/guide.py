@@ -150,8 +150,8 @@ def render() -> None:
                                 font-size:0.85rem; margin:4px 0 2px;">Étape 3</div>
                     <div style="font-size:0.8rem; color:#374151; line-height:1.5;">
                         <strong>Priorisez</strong><br>
-                        Concentrez-vous d'abord sur <em>Champions</em> (rétention)
-                        et <em>Déçus</em> (récupération). Le ROI y est maximal.
+                        Concentrez-vous d'abord sur <em>Acheteurs Premium</em> (nurturing)
+                        et <em>Dormants Premium</em> (réactivation). Le ROI y est maximal.
                     </div>
                 </div>
             </div>
@@ -220,9 +220,10 @@ def render() -> None:
             "Ratio fret / panier (avg_freight_ratio)",
             icon="🚛",
             definition="Part des frais de livraison rapportée à la valeur totale de la commande.",
-            how_to_read="Un ratio de <strong>0.84 (84 %)</strong> comme dans le Cluster 2 "
-            "signifie que pour un panier de 37 BRL, le client paie 31 BRL de frais "
-            "de port. C'est rédhibitoire et bloque les rachats.",
+            how_to_read="Un ratio élevé (ex. 50 %+) signifie que la livraison coûte "
+            "plus que la moitié du panier — c'est rédhibitoire et bloque les rachats. "
+            "Les Dormants Budget (Nordeste / Norte) subissent des frais de port élevés "
+            "qui expliquent en partie leur inactivité.",
         )
 
     with tab_sat:
@@ -233,7 +234,7 @@ def render() -> None:
             how_to_read="<strong>4-5 :</strong> client satisfait, peu d'action nécessaire. "
             "<strong>3 :</strong> neutre, à surveiller. "
             "<strong>1-2 :</strong> insatisfaction sévère → action urgente. "
-            "Le Cluster 5 a une note de 1.0/5 en médiane — c'est une urgence.",
+            "Un segment avec une note médiane en dessous de 3/5 est un signal d'alerte prioritaire.",
         )
 
     with tab_pay:
@@ -243,9 +244,9 @@ def render() -> None:
             definition="Estimation de la valeur totale qu'un client apportera sur la durée "
             "(Monetary × Frequency, en BRL).",
             how_to_read="Plus ce chiffre est élevé, plus le client est <strong>précieux</strong>. "
-            "Le Cluster 4 (Champions) a un CLV de 476 BRL — "
-            "soit 3× le CLV médian global. Un client Champion perdu = "
-            "une perte 3× plus importante qu'un client standard.",
+            "Les Acheteurs Premium (Cluster 2) ont le CLV actif le plus élevé. "
+            "Les Dormants Premium (Cluster 3) ont aussi un fort CLV historique "
+            "— chaque client réactivé dans ce segment a une valeur 2–3× supérieure à la moyenne.",
         )
         _metric_card(
             "Mode de paiement (payment_type_cc_flag)",
@@ -261,9 +262,9 @@ def render() -> None:
             icon="📋",
             definition="Nombre moyen de fois où le paiement est fractionné.",
             how_to_read="Au Brésil, le crédit sans intérêt en plusieurs fois est courant. "
-            "Un segment avec <strong>8 versements</strong> en moyenne (Cluster 0) "
-            "achète des produits coûteux et a besoin d'étalement de paiement "
-            "— proposer 12-18 versements peut augmenter le panier.",
+            "Les Acheteurs et Dormants Premium paient plus souvent par carte en plusieurs versements. "
+            "Proposer des facilités de paiement supplémentaires peut débloquer des achats "
+            "sur des produits coûteux (électronique, mobilier).",
         )
 
     # 3. LIRE LES GRAPHIQUES
@@ -335,62 +336,44 @@ def render() -> None:
             unsafe_allow_html=True,
         )
 
-    # 4. LES 6 SEGMENTS EN UN COUP D'ŒIL
-    _section("Les 6 segments en un coup d'œil", "👥")
+    # 4. LES 4 SEGMENTS EN UN COUP D'ŒIL
+    _section("Les 4 segments en un coup d'œil", "👥")
 
     _segment_card(
-        0,
-        "Premium Crédit",
-        "💳",
-        who="Acheteurs urbains à panier élevé (~231 BRL), paient en 8 versements par carte. "
-        "Inactifs depuis ~8 mois.",
-        priority="Réactivation — risque de churn silencieux élevé.",
-        action="Email avec offre exclusive valable 30 jours + facilités 12-18 versements.",
-    )
-    _segment_card(
-        1,
-        "Économes Boleto",
-        "🐷",
-        who="Clients frugaux, paient uniquement par boleto (virement), panier ~98 BRL. "
-        "Très sensibles au prix.",
-        priority="Fidélisation par le prix — ne pas sur-dépenser en campagnes premium.",
-        action="Newsletter 'meilleures affaires' + cashback boleto 3-5 %.",
-    )
-    _segment_card(
         2,
-        "Périphériques Contraints",
-        "📍",
-        who="Clients éloignés des centres. Frais de port = 84 % du panier (~37 BRL). "
-        "Achats bloqués par la logistique.",
-        priority="Urgence logistique — sans action, ce segment n'achètera plus.",
-        action="Livraison gratuite à partir de 60 BRL + mise en avant de vendeurs locaux.",
+        "Acheteurs Premium",
+        "⭐",
+        who="24 % de la base (18 546 clients). Récents (~131j), panier élevé (~180 BRL). "
+        "Beauté premium, électronique, mode. Paient par carte de crédit.",
+        priority="⚠️ PRIORITÉ ABSOLUE — nurturing immédiat pour créer l'habitude d'achat.",
+        action="Email de nurturing J+30 + offre –10 % valable 45 jours + invitation programme VIP.",
     )
     _segment_card(
         3,
-        "Mainstream",
-        "👥",
-        who="41 % de la base. Panier standard ~96 BRL, carte de crédit, 2 versements, satisfait. "
-        "Le cœur de cible Olist.",
-        priority="Volume — acquisition et rétention de masse.",
-        action="Programme de parrainage + upsell vers Premium avec offres à 3 versements.",
+        "Dormants Premium",
+        "🌙",
+        who="23 % de la base (17 470 clients). Inactifs depuis ~367 jours, mais panier élevé (~160 BRL). "
+        "Électronique, mobilier, montres. Paient par carte en plusieurs fois.",
+        priority="Réactivation urgente — chaque mois supplémentaire réduit les chances de retour.",
+        action="Email 'Vous nous manquez' + offre exclusive –20 % valable 30 jours.",
     )
     _segment_card(
-        4,
-        "Champions",
-        "🏆",
-        who="Seuls 3 % de la base mais CLV ~476 BRL (3× la moyenne). "
-        "Acheteurs répétés, les plus récents.",
-        priority="⚠️ PRIORITÉ ABSOLUE — ne jamais laisser sans contact > 60 jours.",
-        action="Accès VIP, ventes privées, cadeau surprise sur prochain achat.",
+        0,
+        "Acheteurs Budget",
+        "🛒",
+        who="28 % de la base (21 146 clients) — le groupe le plus nombreux. Récents (~124j) "
+        "mais petit panier (~64 BRL). Beauté, maison, articles pour enfants.",
+        priority="Volume — activer la récurrence par des promotions régulières.",
+        action="Newsletter promo hebdomadaire + programme de fidélité points.",
     )
     _segment_card(
-        5,
-        "Déçus / Insatisfaits",
-        "😞",
-        who="Note 1/5 malgré une livraison en avance. Incident produit ou colis endommagé. "
-        "Risque de bad buzz élevé.",
-        priority="⚠️ URGENCE — chaque jour sans réponse amplifie le risque.",
-        action="Email d'excuse + bon de réduction dans les 24h + enquête 2 questions.",
+        1,
+        "Dormants Budget",
+        "⏳",
+        who="25 % de la base (18 775 clients). Inactifs depuis ~292 jours, petit panier (~72 BRL). "
+        "Souvent dans Nordeste / Norte — frais de port élevés, peu de moyens.",
+        priority="ROI faible — investissement minimal uniquement.",
+        action="Email automatisé simple (sans remise élevée). Archiver après 60j sans réaction.",
     )
 
     # 5. TABLEAU DE BORD PRIORITÉS
@@ -409,40 +392,33 @@ def render() -> None:
                 </tr>
             </thead>
             <tbody>
-                <tr style="background:#fef9c3;">
+                <tr style="background:#eff6ff;">
                     <td style="padding:9px 14px; font-weight:700;">🥇 #1</td>
-                    <td style="padding:9px 14px;">🏆 Champions</td>
-                    <td style="padding:9px 14px;">Immédiat</td>
-                    <td style="padding:9px 14px;">Rétention VIP</td>
+                    <td style="padding:9px 14px;">⭐ Acheteurs Premium (C2)</td>
+                    <td style="padding:9px 14px;">Immédiat (J+30)</td>
+                    <td style="padding:9px 14px;">Nurturing + VIP</td>
                     <td style="padding:9px 14px;">CLV ×2 possible sur 12 mois</td>
                 </tr>
-                <tr style="background:#fee2e2;">
-                    <td style="padding:9px 14px; font-weight:700;">🥈 #2</td>
-                    <td style="padding:9px 14px;">😞 Déçus</td>
-                    <td style="padding:9px 14px;">Immédiat (&lt;24h)</td>
-                    <td style="padding:9px 14px;">Récupération SAV</td>
-                    <td style="padding:9px 14px;">Réduction du churn et du bad buzz</td>
-                </tr>
                 <tr style="background:#fef3c7;">
-                    <td style="padding:9px 14px; font-weight:700;">🥉 #3</td>
-                    <td style="padding:9px 14px;">💳 Premium Crédit</td>
+                    <td style="padding:9px 14px; font-weight:700;">🥈 #2</td>
+                    <td style="padding:9px 14px;">🌙 Dormants Premium (C3)</td>
                     <td style="padding:9px 14px;">Court terme (30j)</td>
-                    <td style="padding:9px 14px;">Réactivation</td>
-                    <td style="padding:9px 14px;">Récupérer 15-20 % d'inactifs</td>
-                </tr>
-                <tr style="background:#eff6ff;">
-                    <td style="padding:9px 14px; font-weight:700;">#4</td>
-                    <td style="padding:9px 14px;">📍 Périphériques</td>
-                    <td style="padding:9px 14px;">Moyen terme</td>
-                    <td style="padding:9px 14px;">Logistique</td>
-                    <td style="padding:9px 14px;">+30 % fréquence d'achat possible</td>
+                    <td style="padding:9px 14px;">Réactivation premium</td>
+                    <td style="padding:9px 14px;">Récupérer 20–30 % d'inactifs à fort panier</td>
                 </tr>
                 <tr style="background:#f0fdf4;">
-                    <td style="padding:9px 14px; font-weight:700;">#5</td>
-                    <td style="padding:9px 14px;">👥 Mainstream</td>
-                    <td style="padding:9px 14px;">Long terme</td>
-                    <td style="padding:9px 14px;">Volume + parrainage</td>
-                    <td style="padding:9px 14px;">Acquisition organique via word-of-mouth</td>
+                    <td style="padding:9px 14px; font-weight:700;">🥉 #3</td>
+                    <td style="padding:9px 14px;">🛒 Acheteurs Budget (C0)</td>
+                    <td style="padding:9px 14px;">Court terme (hebdo)</td>
+                    <td style="padding:9px 14px;">Promotions + fidélité</td>
+                    <td style="padding:9px 14px;">+20 % fréquence d'achat sur 6 mois</td>
+                </tr>
+                <tr style="background:#f9fafb;">
+                    <td style="padding:9px 14px; font-weight:700;">#4</td>
+                    <td style="padding:9px 14px;">⏳ Dormants Budget (C1)</td>
+                    <td style="padding:9px 14px;">Minimal</td>
+                    <td style="padding:9px 14px;">Email automatisé uniquement</td>
+                    <td style="padding:9px 14px;">Budget minimal — archiver si pas de réaction à 60j</td>
                 </tr>
             </tbody>
         </table>

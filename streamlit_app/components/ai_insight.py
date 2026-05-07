@@ -32,6 +32,12 @@ except Exception:
 
 def _build_prompt(cluster_id: int, profile_row: dict) -> str:
     """Builds the Gemini prompt asking for concrete, specific next actions."""
+    from streamlit_app.components.segment_recommendations import (
+        SEGMENT_NAMES,
+        SEGMENT_TOP_CATEGORIES,
+        SEGMENT_PRODUCT_RECS,
+    )
+
     n = int(profile_row.get("n_customers", 0))
     pct = float(profile_row.get("pct_customers", 0))
     recency = float(profile_row.get("Recency", 0))
@@ -51,28 +57,49 @@ def _build_prompt(cluster_id: int, profile_row: dict) -> str:
         else f"{delivery_delay:.1f} jours de retard"
     )
 
-    return f"""Tu es responsable CRM opérationnel chez Olist, la principale marketplace brésilienne.
+    segment_name = SEGMENT_NAMES.get(cluster_id, f"Cluster {cluster_id}")
+    top_cats = ", ".join(SEGMENT_TOP_CATEGORIES.get(cluster_id, []))
+    top_prods = "\n".join(
+        f"  - {p}" for p in SEGMENT_PRODUCT_RECS.get(cluster_id, [])
+    )
 
-Profil médian du **Cluster {cluster_id}** ({n:,} clients, {pct:.1f}% de la base) :
+    return f"""Tu es responsable CRM et e-merchandising chez Olist, la principale marketplace brésilienne.
+
+Profil médian du segment **{segment_name}** — Cluster {cluster_id} ({n:,} clients, {pct:.1f}% de la base) :
+
+Comportement d'achat :
 - Récence : {recency:.0f} jours depuis le dernier achat
-- Montant panier : {monetary:.2f} BRL
+- Panier médian : {monetary:.0f} BRL
 - Fréquence : {frequency:.1f} commande(s)
+- CLV proxy : {clv:.0f} BRL
+- Paiement : {payment_str}, {installments:.1f} versement(s) en moyenne
+
+Expérience logistique :
 - Ratio fret/panier : {freight_ratio:.1%}
 - Livraison : {delivery_str}
-- Note satisfaction : {review:.1f}/5
-- Paiement : {payment_str}, {installments:.1f} versements
-- CLV proxy : {clv:.2f} BRL
+- Satisfaction : {review:.1f}/5
 
-Ta mission : produire exactement **5 tâches opérationnelles** à exécuter cette semaine.
+Préférences produit (catégories dominantes dans ce cluster) :
+- Top catégories : {top_cats}
+- Produits typiques consommés :
+{top_prods}
+
+Ta mission : produire exactement **5 tâches opérationnelles** à exécuter cette semaine, \
+en couvrant les deux axes suivants :
+- **Axe CRM / fréquence** : actions sur la cadence de communication, les canaux, les offres
+- **Axe produit** : actions sur les produits spécifiques à pousser, les mises en avant, \
+les cross-sells dans les catégories dominantes de ce segment
 
 Règles impératives :
-- Chaque tâche commence par un verbe d'action au présent (Envoyer, Créer, Configurer, Appeler, Mettre en place…)
-- Chaque tâche est **spécifique et mesurable** : inclure un chiffre, un délai, un canal ou un critère concret
-- Ne pas répéter des conseils génériques type "personnaliser l'expérience" ou "fidéliser les clients"
-- Ne pas expliquer pourquoi — juste quoi faire exactement
-- Maximum 20 mots par tâche
+- Chaque tâche commence par un verbe d'action (Envoyer, Créer, Lancer, Mettre en avant…)
+- Chaque tâche est spécifique : inclure un produit ou une catégorie réelle, un chiffre, un délai ou un canal
+- Alterner entre actions sur la fréquence de contact et actions sur les produits à pousser
+- Écrire en français simple, clair, compréhensible par quelqu'un sans formation marketing — \
+pas de jargon, pas d'anglais, pas de termes techniques
+- Chaque tâche doit pouvoir être comprise et exécutée par n'importe quel membre de l'équipe
+- Maximum 25 mots par tâche
 
-Format de réponse — uniquement cette liste, rien d'autre :
+Format de réponse — uniquement cette liste numérotée, rien d'autre :
 1. [tâche]
 2. [tâche]
 3. [tâche]

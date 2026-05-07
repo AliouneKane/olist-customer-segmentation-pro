@@ -28,12 +28,22 @@ from streamlit_app.components.sidebar import (
     PAGE_COMPARISON,
     PAGE_GUIDE,
     PAGE_OVERVIEW,
+    PAGE_PREDICTION,
     PAGE_SEGMENT,
     render_sidebar,
 )
 from streamlit_app.styles import inject_css
 
 inject_css()
+
+# Sync artifacts from GCS on startup (silent if GCS not configured)
+if "artifacts_synced" not in st.session_state:
+    try:
+        from src.artifact_store import download_artifacts
+        download_artifacts()
+    except Exception:
+        pass
+    st.session_state["artifacts_synced"] = True
 selected_page, cluster_id = render_sidebar()
 
 if selected_page == PAGE_OVERVIEW:
@@ -48,6 +58,11 @@ elif selected_page == PAGE_SEGMENT:
 
 elif selected_page == PAGE_COMPARISON:
     from streamlit_app.views.comparison import render
+
+    render()
+
+elif selected_page == PAGE_PREDICTION:
+    from streamlit_app.views.prediction import render
 
     render()
 

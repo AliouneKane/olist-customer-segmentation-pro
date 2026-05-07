@@ -1,0 +1,76 @@
+name: Ingest New Data & Retrain
+
+on:
+  push:
+    paths:
+      - "data/incoming/*.csv"
+  workflow_dispatch:
+    inputs:
+      force_retrain:
+        description: "Forcer le réentraînement même si silhouette ne s'améliore pas"
+        type: boolean
+        default: false
+
+jobs:
+  ingest-and-retrain:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_CREDENTIALS }}
+
+      # ── Étape 1 : Ingestion ──────────────────────────────────────────────
+      - name: Ingest new CSV data into Neon
+        id: ingest
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          python scripts/ingest_new_data.py
+          echo "new_data=$?" >> $GITHUB_OUTPUT
+        continue-on-error: true
+
+      - name: Log ingestion result
+        run: |
+          if [ "${{ steps.ingest.outputs.new_data }}" = "0" ]; then
+            echo "### ✅ Nouvelles données ingérées dans Neon" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "### ℹ️ Aucune nouvelle donnée — retrain ignoré" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      # ── Étape 2 : Réentraînement (uniquement si nouvelles données) ───────
+      - name: Retrain model
+        if: steps.ingest.outputs.new_data == '0' || github.event.inputs.force_retrain == 'true'
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          GCS_BUCKET: ${{ secrets.GCS_BUCKET }}
+          GCP_PROJECT: curious-idea-490213-j8
+          MPLBACKEND: Agg
+        run: |
+          FORCE_FLAG=""
+          if [ "${{ github.event.inputs.force_retrain }}" = "true" ]; then
+            FORCE_FLAG="--force"
+          fi
+          python scripts/retrain.py $FORCE_FLAG
+
+      - name: Final summary
+        if: always()
+        run: |
+          echo "## Résumé du pipeline" >> $GITHUB_STEP_SUMMARY
+          echo "- **Ingestion** : ${{ steps.ingest.outputs.new_data == '0' && '✅ Nouvelles données ajoutées' || '⏭️ Rien à ingérer' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Retrain** : voir les logs ci-dessus" >> $GITHUB_STEP_SUMMARY
+          echo "- **GCS bucket** : gs://${{ secrets.GCS_BUCKET }}" >> $GITHUB_STEP_SUMMARY

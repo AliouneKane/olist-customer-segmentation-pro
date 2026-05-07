@@ -19,12 +19,28 @@ load_dotenv(Path(__file__).resolve().parent.parent / ".env")
 def get_db_engine() -> Engine:
     """Creates a SQLAlchemy engine for PostgreSQL.
 
+    Prefers DATABASE_URL if set (Neon.tech / Cloud SQL), otherwise falls back
+    to individual POSTGRES_* env vars (local docker-compose).
+
     Returns:
         Engine: SQLAlchemy engine object.
 
     Raises:
-        EnvironmentError: If any required PostgreSQL env variable is missing.
+        EnvironmentError: If no usable connection info is found.
     """
+    database_url = os.getenv("DATABASE_URL")
+    if database_url:
+        # Strip unsupported psycopg2 params (e.g. channel_binding)
+        if "channel_binding" in database_url:
+            from urllib.parse import urlparse, urlencode, parse_qs, urlunparse
+            parsed = urlparse(database_url)
+            params = parse_qs(parsed.query)
+            params.pop("channel_binding", None)
+            clean_query = urlencode({k: v[0] for k, v in params.items()})
+            database_url = urlunparse(parsed._replace(query=clean_query))
+        logger.info("Using DATABASE_URL (Neon / Cloud SQL)")
+        return create_engine(database_url, connect_args={"sslmode": "require"})
+
     user = os.getenv("POSTGRES_USER")
     password = os.getenv("POSTGRES_PASSWORD")
     host = os.getenv("POSTGRES_HOST")
@@ -45,10 +61,11 @@ def get_db_engine() -> Engine:
     if missing:
         raise EnvironmentError(
             f"Variables manquantes dans .env : {', '.join(missing)}. "
-            "Créez un fichier .env à la racine du projet."
+            "Définissez DATABASE_URL ou les variables POSTGRES_* dans .env."
         )
 
     connection_string = f"postgresql://{user}:{password}@{host}:{port}/{db}"
+    logger.info("Using local PostgreSQL (%s:%s/%s)", host, port, db)
     return create_engine(connection_string)
 
 
@@ -161,20 +178,43 @@ def get_customer_aggregation(engine: Engine) -> pd.DataFrame:
     return df
 
 
+KAGGLE_DATASET = "olistbr/brazilian-ecommerce"
+
+
+def download_kaggle_dataset(tmp_dir: Path) -> None:
+    """Downloads and unzips the Olist dataset from Kaggle into tmp_dir.
+
+    Args:
+        tmp_dir: Directory where CSV files will be extracted.
+
+    Raises:
+        ImportError: If the kaggle package is not installed.
+        OSError: If Kaggle credentials (~/.kaggle/kaggle.json) are missing.
+    """
+    from kaggle.api.kaggle_api_extended import KaggleApi
+
+    api = KaggleApi()
+    api.authenticate()
+    logger.info("Downloading Kaggle dataset '%s'...", KAGGLE_DATASET)
+    api.dataset_download_files(KAGGLE_DATASET, path=tmp_dir, unzip=True)
+    logger.info("Download complete.")
+
+
+def refresh_data_from_kaggle() -> None:
+    """Downloads the Olist dataset from Kaggle and ingests it into PostgreSQL.
+
+    Orchestrates download_kaggle_dataset() + ingest_csv_to_postgres() in a
+    temporary directory that is automatically cleaned up after ingestion.
+    """
+    import tempfile
+
+    engine = get_db_engine()
+    with tempfile.TemporaryDirectory() as tmp:
+        tmp_dir = Path(tmp)
+        download_kaggle_dataset(tmp_dir)
+        ingest_csv_to_postgres(tmp_dir, engine)
+    logger.info("Kaggle data successfully loaded into PostgreSQL.")
+
+
 if __name__ == "__main__":
-    # Define paths
-    PROJECT_ROOT = Path(__file__).resolve().parent.parent
-    DATA_DIR = PROJECT_ROOT / "data"
-
-    # Initialize DB connection
-    try:
-        db_engine = get_db_engine()
-        # Test connection
-        with db_engine.connect() as conn:
-            logger.info("Database connection successful.")
-
-        # Run ingestion
-        ingest_csv_to_postgres(DATA_DIR, db_engine)
-        logger.info("Data ingestion completed.")
-    except Exception as ex:
-        logger.error(f"Initialization error: {ex}")
+    refresh_data_from_kaggle()

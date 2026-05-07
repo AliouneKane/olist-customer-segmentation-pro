@@ -1,0 +1,59 @@
+name: Monthly Model Retrain
+
+on:
+  schedule:
+    - cron: "0 3 1 * *" # 1er de chaque mois à 3h UTC
+  workflow_dispatch:
+    inputs:
+      force:
+        description: "Forcer même si le silhouette ne s'améliore pas"
+        type: boolean
+        default: false
+
+jobs:
+  retrain:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_CREDENTIALS }}
+
+      - name: Run retrain
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          GCS_BUCKET: ${{ secrets.GCS_BUCKET }}
+          GCP_PROJECT: curious-idea-490213-j8
+          MPLBACKEND: Agg
+        run: |
+          FORCE_FLAG=""
+          if [ "${{ github.event.inputs.force }}" = "true" ]; then
+            FORCE_FLAG="--force"
+          fi
+          python scripts/retrain.py $FORCE_FLAG
+          echo "exit_code=$?" >> $GITHUB_ENV
+
+      - name: Summary
+        if: always()
+        run: |
+          if [ "$exit_code" = "0" ]; then
+            echo "### ✅ Retrain réussi — nouveaux artefacts uploadés sur GCS" >> $GITHUB_STEP_SUMMARY
+          elif [ "$exit_code" = "1" ]; then
+            echo "### ℹ️ Pas de mise à jour — le modèle actuel est toujours le meilleur" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "### ❌ Erreur pendant le réentraînement" >> $GITHUB_STEP_SUMMARY
+          fi
