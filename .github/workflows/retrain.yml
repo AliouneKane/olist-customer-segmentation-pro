@@ -1,8 +1,8 @@
-name: Monthly Model Retrain
+name: Quarterly Model Retrain
 
 on:
   schedule:
-    - cron: "0 3 1 * *" # 1er de chaque mois à 3h UTC
+    - cron: "0 3 1 1,4,7,10 *" # 1er janvier, avril, juillet, octobre à 3h UTC
   workflow_dispatch:
     inputs:
       force:
