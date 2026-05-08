@@ -20,9 +20,7 @@ def _section(title: str, icon: str = "") -> None:
     )
 
 
-def _metric_card(
-    name: str, definition: str, how_to_read: str, icon: str = ""
-) -> None:
+def _metric_card(name: str, definition: str, how_to_read: str, icon: str = "") -> None:
     st.markdown(
         f"""
         <div style="background:#FFFFFF; border:1px solid #e5e7eb;

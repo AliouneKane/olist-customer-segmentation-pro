@@ -123,7 +123,8 @@ def _ai_insight_section(cluster_id: int, profile_df) -> None:
 
         if not _GEMINI_AVAILABLE:
             st.info(
-                "IA indisponible — configurez `GEMINI_API_KEY` dans `.env`.", icon=":material/smart_toy:"
+                "IA indisponible — configurez `GEMINI_API_KEY` dans `.env`.",
+                icon=":material/smart_toy:",
             )
             return
 
