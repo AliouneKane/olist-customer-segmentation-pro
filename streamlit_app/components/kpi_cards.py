@@ -45,23 +45,23 @@ def render_global_kpi_row(profile_df: pd.DataFrame) -> None:
     col1, col2, col3, col4, col5 = st.columns(5, gap="small")
 
     with col1:
-        st.info("Total Clients", icon="👥")
+        st.info("Total Clients", icon=":material/group:")
         st.metric(label="Clients uniques", value=numerize(float(total_customers)))
 
     with col2:
-        st.info("Segments KMeans", icon="🔢")
+        st.info("Segments KMeans", icon=":material/tag:")
         st.metric(label="Clusters", value=str(n_clusters))
 
     with col3:
-        st.info("Panier Médian", icon="🛒")
+        st.info("Panier Médian", icon=":material/shopping_cart:")
         st.metric(label="Monetary BRL", value=f"{median_monetary:,.0f}")
 
     with col4:
-        st.info("CLV Médian", icon="💰")
+        st.info("CLV Médian", icon=":material/payments:")
         st.metric(label="CLV proxy BRL", value=f"{median_clv:,.0f}")
 
     with col5:
-        st.info("Satisfaction Moy.", icon="⭐")
+        st.info("Satisfaction Moy.", icon=":material/star_rate:")
         st.metric(
             label="Score /5",
             value=f"{avg_review:.2f}",
@@ -96,23 +96,23 @@ def render_segment_kpi_row(profile_df: pd.DataFrame, cluster_id: int) -> None:
     col1, col2, col3, col4, col5 = st.columns(5, gap="small")
 
     with col1:
-        st.info("Taille Segment", icon="👥")
+        st.info("Taille Segment", icon=":material/group:")
         st.metric(label="Clients", value=f"{n:,}", delta=f"{pct:.1f}% base")
 
     with col2:
-        st.info("Panier Médian", icon="🛒")
+        st.info("Panier Médian", icon=":material/shopping_cart:")
         st.metric(label="Monetary BRL", value=f"{monetary:,.0f}")
 
     with col3:
-        st.info("CLV Proxy", icon="💰")
+        st.info("CLV Proxy", icon=":material/payments:")
         st.metric(label="Lifetime value", value=f"{clv:,.0f}")
 
     with col4:
-        st.info("Satisfaction", icon="⭐")
+        st.info("Satisfaction", icon=":material/star_rate:")
         st.metric(label="Score /5", value=f"{review:.1f}")
 
     with col5:
-        st.info("Récence", icon="📅")
+        st.info("Récence", icon=":material/calendar_today:")
         st.metric(
             label="Jours",
             value=f"{recency:.0f}",

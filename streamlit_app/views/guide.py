@@ -21,7 +21,7 @@ def _section(title: str, icon: str = "") -> None:
 
 
 def _metric_card(
-    name: str, definition: str, how_to_read: str, icon: str = "📌"
+    name: str, definition: str, how_to_read: str, icon: str = ""
 ) -> None:
     st.markdown(
         f"""
@@ -125,7 +125,7 @@ def render() -> None:
                         margin-bottom:10px;">Parcours recommandé en 3 étapes :</div>
             <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px;">
                 <div style="text-align:center;">
-                    <div style="font-size:1.8rem;">📊</div>
+                    <div style="font-size:1.8rem;">Vue</div>
                     <div style="font-weight:700; color:{OLIST_BLUE};
                                 font-size:0.85rem; margin:4px 0 2px;">Étape 1</div>
                     <div style="font-size:0.8rem; color:#374151; line-height:1.5;">
@@ -135,7 +135,7 @@ def render() -> None:
                     </div>
                 </div>
                 <div style="text-align:center;">
-                    <div style="font-size:1.8rem;">🔍</div>
+                    <div style="font-size:1.8rem;">Seg.</div>
                     <div style="font-weight:700; color:{OLIST_BLUE};
                                 font-size:0.85rem; margin:4px 0 2px;">Étape 2</div>
                     <div style="font-size:0.8rem; color:#374151; line-height:1.5;">
@@ -145,7 +145,7 @@ def render() -> None:
                     </div>
                 </div>
                 <div style="text-align:center;">
-                    <div style="font-size:1.8rem;">🎯</div>
+                    <div style="font-size:1.8rem;">Pred.</div>
                     <div style="font-weight:700; color:{OLIST_BLUE};
                                 font-size:0.85rem; margin:4px 0 2px;">Étape 3</div>
                     <div style="font-size:0.8rem; color:#374151; line-height:1.5;">
@@ -161,7 +161,7 @@ def render() -> None:
     )
 
     # 2. GLOSSAIRE DES MÉTRIQUES
-    _section("Comprendre les métriques", "📐")
+    _section("Comprendre les métriques", "")
 
     st.markdown(
         "<p style='color:#6b7280; font-size:0.85rem; margin-bottom:0.75rem;'>"
@@ -172,9 +172,9 @@ def render() -> None:
 
     tab_rfm, tab_exp, tab_sat, tab_pay = st.tabs(
         [
-            "📦 RFM (comportement achat)",
+            "RFM (comportement achat)",
             "🚚 Expérience livraison",
-            "⭐ Satisfaction",
+            "Satisfaction",
             "💳 Paiement & CLV",
         ]
     )
@@ -182,7 +182,7 @@ def render() -> None:
     with tab_rfm:
         _metric_card(
             "Récence (Recency)",
-            icon="📅",
+            icon=":material/calendar_today:",
             definition="Nombre de jours écoulés depuis le dernier achat du client.",
             how_to_read="Plus le chiffre est <strong>élevé</strong>, plus le client est "
             "<strong>inactif</strong>. Un client avec Récence = 30 a acheté "
@@ -199,7 +199,7 @@ def render() -> None:
         )
         _metric_card(
             "Montant (Monetary)",
-            icon="💰",
+            icon=":material/payments:",
             definition="Montant médian d'une commande en Reais brésiliens (BRL).",
             how_to_read="C'est la valeur typique du panier du segment. "
             "1 BRL ≈ 0.18 EUR. Un segment avec Monetary = 200 BRL "
@@ -229,7 +229,7 @@ def render() -> None:
     with tab_sat:
         _metric_card(
             "Note de satisfaction (avg_review_score)",
-            icon="⭐",
+            icon=":material/star_rate:",
             definition="Note moyenne laissée après commande, de 1 à 5.",
             how_to_read="<strong>4-5 :</strong> client satisfait, peu d'action nécessaire. "
             "<strong>3 :</strong> neutre, à surveiller. "
@@ -240,7 +240,7 @@ def render() -> None:
     with tab_pay:
         _metric_card(
             "CLV Proxy (Customer Lifetime Value)",
-            icon="💎",
+            icon=":material/diamond:",
             definition="Estimation de la valeur totale qu'un client apportera sur la durée "
             "(Monetary × Frequency, en BRL).",
             how_to_read="Plus ce chiffre est élevé, plus le client est <strong>précieux</strong>. "
@@ -259,7 +259,7 @@ def render() -> None:
         )
         _metric_card(
             "Nombre de versements (avg_installments)",
-            icon="📋",
+            icon=":material/table_view:",
             definition="Nombre moyen de fois où le paiement est fractionné.",
             how_to_read="Au Brésil, le crédit sans intérêt en plusieurs fois est courant. "
             "Les Acheteurs et Dormants Premium paient plus souvent par carte en plusieurs versements. "
@@ -268,7 +268,7 @@ def render() -> None:
         )
 
     # 3. LIRE LES GRAPHIQUES
-    _section("Comment lire les graphiques", "📈")
+    _section("Comment lire les graphiques", "")
 
     col_a, col_b = st.columns(2, gap="medium")
 
@@ -291,7 +291,7 @@ def render() -> None:
                         border-radius:10px; padding:1rem 1.2rem; margin-bottom:0.75rem;">
                 <div style="font-weight:700; color:{OLIST_BLUE};
                             font-size:0.9rem; margin-bottom:8px;">
-                    📊 Barres — Comparaison par métrique
+                    Barres — Comparaison par métrique
                 </div>
                 <div style="font-size:0.82rem; color:#374151; line-height:1.6;">
                     Chaque barre = valeur <strong>médiane</strong> du segment (pas la moyenne).
@@ -337,21 +337,21 @@ def render() -> None:
         )
 
     # 4. LES 4 SEGMENTS EN UN COUP D'ŒIL
-    _section("Les 4 segments en un coup d'œil", "👥")
+    _section("Les 4 segments en un coup d'œil", "")
 
     _segment_card(
         2,
         "Acheteurs Premium",
-        "⭐",
+        "C2",
         who="24 % de la base (18 546 clients). Récents (~131j), panier élevé (~180 BRL). "
         "Beauté premium, électronique, mode. Paient par carte de crédit.",
-        priority="⚠️ PRIORITÉ ABSOLUE — nurturing immédiat pour créer l'habitude d'achat.",
+        priority="PRIORITÉ ABSOLUE — nurturing immédiat pour créer l'habitude d'achat.",
         action="Email de nurturing J+30 + offre –10 % valable 45 jours + invitation programme VIP.",
     )
     _segment_card(
         3,
         "Dormants Premium",
-        "🌙",
+        "C3",
         who="23 % de la base (17 470 clients). Inactifs depuis ~367 jours, mais panier élevé (~160 BRL). "
         "Électronique, mobilier, montres. Paient par carte en plusieurs fois.",
         priority="Réactivation urgente — chaque mois supplémentaire réduit les chances de retour.",
@@ -360,7 +360,7 @@ def render() -> None:
     _segment_card(
         0,
         "Acheteurs Budget",
-        "🛒",
+        "C0",
         who="28 % de la base (21 146 clients) — le groupe le plus nombreux. Récents (~124j) "
         "mais petit panier (~64 BRL). Beauté, maison, articles pour enfants.",
         priority="Volume — activer la récurrence par des promotions régulières.",
@@ -369,7 +369,7 @@ def render() -> None:
     _segment_card(
         1,
         "Dormants Budget",
-        "⏳",
+        "C1",
         who="25 % de la base (18 775 clients). Inactifs depuis ~292 jours, petit panier (~72 BRL). "
         "Souvent dans Nordeste / Norte — frais de port élevés, peu de moyens.",
         priority="ROI faible — investissement minimal uniquement.",
@@ -377,7 +377,7 @@ def render() -> None:
     )
 
     # 5. TABLEAU DE BORD PRIORITÉS
-    _section("Tableau de bord des priorités marketing", "🎯")
+    _section("Tableau de bord des priorités marketing", "")
 
     st.markdown(
         """
@@ -394,28 +394,28 @@ def render() -> None:
             <tbody>
                 <tr style="background:#eff6ff;">
                     <td style="padding:9px 14px; font-weight:700;">🥇 #1</td>
-                    <td style="padding:9px 14px;">⭐ Acheteurs Premium (C2)</td>
+                    <td style="padding:9px 14px;">Acheteurs Premium (C2)</td>
                     <td style="padding:9px 14px;">Immédiat (J+30)</td>
                     <td style="padding:9px 14px;">Nurturing + VIP</td>
                     <td style="padding:9px 14px;">CLV ×2 possible sur 12 mois</td>
                 </tr>
                 <tr style="background:#fef3c7;">
                     <td style="padding:9px 14px; font-weight:700;">🥈 #2</td>
-                    <td style="padding:9px 14px;">🌙 Dormants Premium (C3)</td>
+                    <td style="padding:9px 14px;">Dormants Premium (C3)</td>
                     <td style="padding:9px 14px;">Court terme (30j)</td>
                     <td style="padding:9px 14px;">Réactivation premium</td>
                     <td style="padding:9px 14px;">Récupérer 20–30 % d'inactifs à fort panier</td>
                 </tr>
                 <tr style="background:#f0fdf4;">
                     <td style="padding:9px 14px; font-weight:700;">🥉 #3</td>
-                    <td style="padding:9px 14px;">🛒 Acheteurs Budget (C0)</td>
+                    <td style="padding:9px 14px;">Acheteurs Budget (C0)</td>
                     <td style="padding:9px 14px;">Court terme (hebdo)</td>
                     <td style="padding:9px 14px;">Promotions + fidélité</td>
                     <td style="padding:9px 14px;">+20 % fréquence d'achat sur 6 mois</td>
                 </tr>
                 <tr style="background:#f9fafb;">
                     <td style="padding:9px 14px; font-weight:700;">#4</td>
-                    <td style="padding:9px 14px;">⏳ Dormants Budget (C1)</td>
+                    <td style="padding:9px 14px;">Dormants Budget (C1)</td>
                     <td style="padding:9px 14px;">Minimal</td>
                     <td style="padding:9px 14px;">Email automatisé uniquement</td>
                     <td style="padding:9px 14px;">Budget minimal — archiver si pas de réaction à 60j</td>
@@ -429,8 +429,8 @@ def render() -> None:
     st.markdown("<div style='margin-top:2rem;'></div>", unsafe_allow_html=True)
 
     st.info(
-        "💡 **Astuce :** Pour analyser un segment spécifique, sélectionnez-le dans la "
+        "**Astuce :** Pour analyser un segment spécifique, sélectionnez-le dans la "
         "sidebar (menu *Segment Actif*) puis naviguez vers **Détail Segment**. "
         "L'analyse IA Gemini vous donnera une interprétation personnalisée en langage naturel.",
-        icon="💡",
+        icon=":material/lightbulb:",
     )

@@ -24,7 +24,7 @@ def render() -> None:
     # Header
     st.markdown(
         f"<h2 style='color:{OLIST_BLUE}; margin-bottom:0.2rem;'>"
-        "⚖️ Comparaison des Algorithmes de Clustering</h2>"
+        "Comparaison des Algorithmes de Clustering</h2>"
         "<p style='color:#6b7280; margin-bottom:1.25rem;'>"
         "Benchmark KMeans · BisectingKMeans · UMAP+KMeans sur le dataset Olist (93 358 clients)</p>",
         unsafe_allow_html=True,
@@ -36,7 +36,7 @@ def render() -> None:
         st.info(
             "`data/processed/model_comparison.csv` introuvable. "
             "Exécutez `scripts/generate_artifacts.py` pour générer les métriques.",
-            icon="📊",
+            icon=":material/bar_chart:",
         )
         return
 
@@ -54,16 +54,16 @@ def render() -> None:
 
         col_a, col_b, col_c = st.columns(3, gap="small")
         with col_a:
-            st.info("Meilleur Algorithme", icon="🏆")
+            st.info("Meilleur Algorithme", icon=":material/military_tech:")
             st.markdown(
                 f"<div style='font-size:1.5rem; font-weight:700; padding:0.25rem 0;'>{algo}</div>",
                 unsafe_allow_html=True,
             )
         with col_b:
-            st.info("Silhouette Score ↑", icon="📈")
+            st.info("Silhouette Score ↑", icon=":material/trending_up:")
             st.metric("Score", f"{sil:.4f}")
         with col_c:
-            st.info("Score Composite ↑", icon="🎯")
+            st.info("Score Composite ↑", icon=":material/track_changes:")
             st.metric("Normalisé", f"{float(best.get('composite_score', 0)):.4f}")
 
         from streamlit_extras.metric_cards import style_metric_cards
@@ -129,7 +129,7 @@ def render() -> None:
     st.plotly_chart(table_fig, use_container_width=True)
 
     # Methodology note
-    with st.expander("📐 MÉTHODOLOGIE ET DÉFINITION DES MÉTRIQUES"):
+    with st.expander("MÉTHODOLOGIE ET DÉFINITION DES MÉTRIQUES"):
         st.markdown(
             """
 **Silhouette Score** ↑ (max 1.0)

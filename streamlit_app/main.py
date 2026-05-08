@@ -19,7 +19,7 @@ import streamlit as st
 
 st.set_page_config(
     page_title="Olist — Customer Segmentation",
-    page_icon="🛍️",
+    page_icon=None,
     layout="wide",
     initial_sidebar_state="expanded",
 )

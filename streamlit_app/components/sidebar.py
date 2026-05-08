@@ -11,11 +11,11 @@ PAGE_PREDICTION = "Prédiction Clients"
 PAGE_GUIDE = "Guide du Dashboard"
 
 _PAGES = [
-    {"name": PAGE_OVERVIEW, "icon": "📊"},
-    {"name": PAGE_SEGMENT, "icon": "🔍"},
-    {"name": PAGE_COMPARISON, "icon": "⚖️"},
-    {"name": PAGE_PREDICTION, "icon": "🎯"},
-    {"name": PAGE_GUIDE, "icon": "📖"},
+    {"name": PAGE_OVERVIEW},
+    {"name": PAGE_SEGMENT},
+    {"name": PAGE_COMPARISON},
+    {"name": PAGE_PREDICTION},
+    {"name": PAGE_GUIDE},
 ]
 
 _SEGMENT_LABELS = {
@@ -25,7 +25,7 @@ _SEGMENT_LABELS = {
     3: "Dormants Premium",
 }
 
-_SEGMENT_ICONS = {0: "🛒", 1: "⏳", 2: "⭐", 3: "🌙"}
+_SEGMENT_CODES = {0: "C0", 1: "C1", 2: "C2", 3: "C3"}
 
 
 def render_sidebar() -> tuple[str, int]:
@@ -72,7 +72,7 @@ def render_sidebar() -> tuple[str, int]:
         for page in _PAGES:
             is_active = page["name"] == current
             # Style active vs inactive via button type
-            label = f"{page['icon']}  {page['name']}"
+            label = page["name"]
             if st.button(
                 label,
                 key=f"nav__{page['name']}",
@@ -101,7 +101,7 @@ def render_sidebar() -> tuple[str, int]:
             label="segment",
             options=options,
             index=current_cluster,
-            format_func=lambda c: f"{_SEGMENT_ICONS[c]}  C{c} — {_SEGMENT_LABELS[c]}",
+            format_func=lambda c: f"{_SEGMENT_CODES[c]} — {_SEGMENT_LABELS[c]}",
             label_visibility="collapsed",
             key="sidebar_cluster_selector",
         )
@@ -115,7 +115,7 @@ def render_sidebar() -> tuple[str, int]:
         st.markdown(
             "<div style='font-size:0.65rem; color:rgba(255,255,255,0.4);"
             " line-height:2; padding-bottom:0.5rem;'>"
-            "📦 75 937 clients · k=4 · Sil. 0.449"
+            "75 937 clients · k=4 · Sil. 0.449"
             "</div>",
             unsafe_allow_html=True,
         )

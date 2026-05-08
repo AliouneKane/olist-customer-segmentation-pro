@@ -100,13 +100,13 @@ def render() -> None:
     # 3 messages-clés
     st.markdown(
         "<h3 style='color:#374151; font-size:1rem; font-weight:700;"
-        " margin-bottom:0.75rem;'>💡 Ce que révèle la segmentation</h3>",
+        " margin-bottom:0.75rem;'>Insights Clés — Ce que révèle la segmentation</h3>",
         unsafe_allow_html=True,
     )
     k1, k2, k3, k4 = st.columns(4, gap="medium")
     with k1:
         _story_card(
-            "⭐",
+            "C2",
             "24 % — Cible premium à convertir",
             "Les <strong>Acheteurs Premium</strong> (C2) ont commandé il y a ~4 mois avec "
             "un panier de <strong>180 BRL</strong>. Beauté haut de gamme, tech, mode. "
@@ -115,7 +115,7 @@ def render() -> None:
         )
     with k2:
         _story_card(
-            "🌙",
+            "C3",
             "23 % — Dormants à fort potentiel",
             "Les <strong>Dormants Premium</strong> (C3) ont dépensé ~160 BRL mais sont "
             "inactifs depuis <strong>367 jours</strong>. Électronique, mobilier, bijoux. "
@@ -124,7 +124,7 @@ def render() -> None:
         )
     with k3:
         _story_card(
-            "🛒",
+            "C0",
             "28 % — Volume et récurrence à activer",
             "Les <strong>Acheteurs Budget</strong> (C0) sont récents (~4 mois) mais économes "
             "(panier ~64 BRL). Beauté, maison, enfants. <strong>Premier groupe de la base</strong> "
@@ -133,7 +133,7 @@ def render() -> None:
         )
     with k4:
         _story_card(
-            "⏳",
+            "C1",
             "25 % — Dormants à relancer prudemment",
             "Les <strong>Dormants Budget</strong> (C1) sont inactifs depuis ~292 jours "
             "et dépensaient peu (~72 BRL). Nordeste et Norte. "
@@ -210,7 +210,7 @@ def render() -> None:
             st.plotly_chart(fig, use_container_width=True)
 
     # Données brutes
-    with st.expander("📄 VOIR LE TABLEAU COMPLET DES PROFILS"):
+    with st.expander("VOIR LE TABLEAU COMPLET DES PROFILS"):
         cols_filter = st.multiselect(
             "Colonnes :",
             options=profile_df.columns.tolist(),

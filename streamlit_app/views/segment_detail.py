@@ -40,12 +40,7 @@ _RADAR_FEATURES = [
     "region_freight_score",
 ]
 
-_ICON_EMOJI_MAP = {
-    "bi-cart": "🛒",
-    "bi-hourglass": "⏳",
-    "bi-star": "⭐",
-    "bi-moon-stars": "🌙",
-}
+_SEGMENT_CODES = {0: "C0", 1: "C1", 2: "C2", 3: "C3"}
 
 
 def _recommendation_card(cluster_id: int) -> None:
@@ -53,7 +48,7 @@ def _recommendation_card(cluster_id: int) -> None:
     avatar = SEGMENT_AVATARS.get(cluster_id, "")
     recs = RECOMMENDATIONS.get(cluster_id, [])
     color = SEGMENT_COLORS[cluster_id % len(SEGMENT_COLORS)]
-    icon = _ICON_EMOJI_MAP.get(SEGMENT_ICONS.get(cluster_id, ""), "👤")
+    code = _SEGMENT_CODES.get(cluster_id, f"C{cluster_id}")
 
     rec_html = "".join(
         f"<li style='margin-bottom:8px; color:#374151; line-height:1.5;'>{r}</li>"
@@ -72,7 +67,10 @@ def _recommendation_card(cluster_id: int) -> None:
             box-shadow: 0 1px 3px #d1d5db;
         ">
             <div style="font-size:1rem; font-weight:700; color:{color}; margin-bottom:12px;">
-                {icon} Stratégie — {name}
+                <span style="background:{color}; color:#FFFFFF; padding:2px 8px;
+                             border-radius:4px; font-size:0.72rem; font-weight:800;
+                             letter-spacing:0.05em; margin-right:8px;">{code}</span>
+                Stratégie — {name}
             </div>
             <div style="
                 background:{color}0d;
@@ -85,7 +83,7 @@ def _recommendation_card(cluster_id: int) -> None:
                 font-size:0.85rem;
                 line-height:1.6;
             ">
-                👤 {avatar}
+                {avatar}
             </div>
             <div style="font-size:0.75rem; font-weight:700; color:#9ca3af;
                         text-transform:uppercase; letter-spacing:0.07em; margin-bottom:8px;">
@@ -107,7 +105,7 @@ def _ai_insight_section(cluster_id: int, profile_df) -> None:
         f"""
         <div style="margin-bottom:0.75rem;">
             <div style="font-size:1.05rem; font-weight:800; color:#212121;">
-                ⚡ Choses à faire dès maintenant
+                Actions prioritaires
             </div>
             <div style="font-size:0.8rem; color:#6b7280; margin-top:3px;">
                 5 actions concrètes générées par IA · propres à ce segment
@@ -125,7 +123,7 @@ def _ai_insight_section(cluster_id: int, profile_df) -> None:
 
         if not _GEMINI_AVAILABLE:
             st.info(
-                "IA indisponible — configurez `GEMINI_API_KEY` dans `.env`.", icon="🤖"
+                "IA indisponible — configurez `GEMINI_API_KEY` dans `.env`.", icon=":material/smart_toy:"
             )
             return
 
@@ -195,7 +193,7 @@ def render(cluster_id: int) -> None:
     # Header
     st.markdown(
         f"<h2 style='margin-bottom:0.2rem;'>"
-        f"🔍 Segment — <span style='color:{color};'>{name}</span></h2>"
+        f"Segment — <span style='color:{color};'>{name}</span></h2>"
         f"<p style='color:#6b7280; margin-bottom:1.25rem;'>"
         f"Cluster {cluster_id} · Analyse détaillée du profil et recommandations marketing</p>",
         unsafe_allow_html=True,
@@ -336,7 +334,7 @@ def render(cluster_id: int) -> None:
     st.plotly_chart(fig, use_container_width=True)
 
     # Expandable profile table
-    with st.expander("📄 VOIR LES MÉDIANES DE TOUS LES SEGMENTS"):
+    with st.expander("VOIR LES MÉDIANES DE TOUS LES SEGMENTS"):
         display_df = profile_df.copy()
         for col in display_df.select_dtypes(include="float").columns:
             display_df[col] = display_df[col].round(2)

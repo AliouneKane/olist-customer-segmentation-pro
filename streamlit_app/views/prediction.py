@@ -100,10 +100,10 @@ _REGION_SCORE: dict[str, int] = {
 }
 
 _ICON_MAP: dict[str, str] = {
-    "bi-cart": "🛒",
-    "bi-hourglass": "⏳",
-    "bi-star": "⭐",
-    "bi-moon-stars": "🌙",
+    "bi-cart": "C0",
+    "bi-hourglass": "C1",
+    "bi-star": "C2",
+    "bi-moon-stars": "C3",
 }
 
 
@@ -276,7 +276,7 @@ def _insight_card(cluster_id: int, new_pct: float, base_pct: float) -> None:
     color = SEGMENT_COLORS[cluster_id % len(SEGMENT_COLORS)]
     name = SEGMENT_NAMES.get(cluster_id, f"Cluster {cluster_id}")
     icon_key = SEGMENT_ICONS.get(cluster_id, "")
-    icon = _ICON_MAP.get(icon_key, "👤")
+    icon = _ICON_MAP.get(icon_key, f"C{cluster_id}")
     delta = new_pct - base_pct
     delta_str = f"+{delta:.1f} pts" if delta >= 0 else f"{delta:.1f} pts"
     delta_color = "#16a34a" if delta >= 0 else "#dc2626"
@@ -366,7 +366,7 @@ def render() -> None:
                 Analyse des Campagnes Marketing
             </div>
             <h1 style="color:#FFFFFF; font-size:1.6rem; font-weight:800; margin:0 0 8px 0;">
-                🎯 Prédiction Nouveaux Clients
+                Prédiction Nouveaux Clients
             </h1>
             <p style="color:rgba(255,255,255,0.85); font-size:0.9rem;
                       max-width:640px; line-height:1.7; margin:0 0 12px 0;">
@@ -485,7 +485,7 @@ def render() -> None:
 
     st.markdown(
         f"<p style='color:#6b7280; font-size:0.85rem;'>"
-        f"✅ Fichier chargé — <strong>{len(df_raw):,} clients</strong>, "
+        f"Fichier chargé — <strong>{len(df_raw):,} clients</strong>, "
         f"{df_raw.shape[1]} colonnes.</p>",
         unsafe_allow_html=True,
     )
@@ -542,7 +542,7 @@ def render() -> None:
     # ════════════════════════════════════════════════════════════════════════
     st.markdown(
         f"<div style='font-size:1.1rem; font-weight:800; color:{OLIST_BLUE};"
-        " margin-bottom:1rem;'>📊 Bloc 1 — Ce qu'on a trouvé</div>",
+        " margin-bottom:1rem;'>Bloc 1 — Ce qu'on a trouvé</div>",
         unsafe_allow_html=True,
     )
 
@@ -552,9 +552,9 @@ def render() -> None:
         <div style="margin-bottom:1.25rem;">
             <div style="display:flex; justify-content:space-between;
                         font-size:0.82rem; font-weight:700; margin-bottom:6px;">
-                <span style="color:{_C_BUD};">🛒 Profil Budget — {pct_budget:.0f}%
+                <span style="color:{_C_BUD};">Budget — {pct_budget:.0f}%
                     &nbsp;({n_budget:,} clients)</span>
-                <span style="color:{_C_PREM};">⭐ Profil Premium — {pct_premium:.0f}%
+                <span style="color:{_C_PREM};">Premium — {pct_premium:.0f}%
                     &nbsp;({n_premium:,} clients)</span>
             </div>
             <div style="display:flex; height:20px; border-radius:10px;
@@ -645,7 +645,7 @@ def render() -> None:
     # Interprétation simple niveau 3e
     if pct_premium >= 60:
         verdict_color = "#16a34a"
-        verdict_icon = "✅"
+        verdict_icon = "OK"
         verdict = (
             f"Vos campagnes ont bien marché. Sur {n_total} nouveaux clients, "
             f"{n_premium} ont dépensé en moyenne <strong>{avg_prem:.0f} BRL</strong> "
@@ -656,7 +656,7 @@ def render() -> None:
         )
     elif pct_budget >= 60:
         verdict_color = "#d97706"
-        verdict_icon = "⚠️"
+        verdict_icon = "ATTENTION"
         verdict = (
             f"Vos campagnes ont attiré surtout des clients qui cherchaient la promo. "
             f"Sur {n_total} nouveaux clients, {n_budget} ont dépensé en moyenne "
@@ -669,7 +669,7 @@ def render() -> None:
         )
     else:
         verdict_color = OLIST_BLUE
-        verdict_icon = "📊"
+        verdict_icon = "—"
         verdict = (
             f"Vos campagnes ont touché les deux types de clients. "
             f"{n_premium} clients ont un profil Premium (panier moyen <strong>{avg_prem:.0f} BRL</strong>) "
@@ -700,7 +700,7 @@ def render() -> None:
     # ════════════════════════════════════════════════════════════════════════
     st.markdown(
         f"<div style='font-size:1.1rem; font-weight:800; color:{OLIST_BLUE};"
-        " margin-bottom:1rem;'>🎯 Bloc 2 — Ce qu'on fait maintenant</div>",
+        " margin-bottom:1rem;'>Bloc 2 — Ce qu'on fait maintenant</div>",
         unsafe_allow_html=True,
     )
 
@@ -737,7 +737,7 @@ def render() -> None:
                         padding:1.1rem 1.25rem; box-shadow:0 1px 3px #f3f4f6;">
                 <div style="font-size:0.88rem; font-weight:700; color:{_C_PREM};
                             margin-bottom:12px;">
-                    ⭐ Pour les {n_premium} clients Premium
+                    Pour les {n_premium} clients Premium
                 </div>
                 {steps_html}
             </div>
@@ -776,7 +776,7 @@ def render() -> None:
                         padding:1.1rem 1.25rem; box-shadow:0 1px 3px #f3f4f6;">
                 <div style="font-size:0.88rem; font-weight:700; color:{_C_BUD};
                             margin-bottom:12px;">
-                    🛒 Pour les {n_budget} clients Budget
+                    Pour les {n_budget} clients Budget
                 </div>
                 {steps_html}
             </div>
@@ -818,6 +818,6 @@ def render() -> None:
             use_container_width=True,
         )
 
-    with st.expander("📄 VOIR LE DÉTAIL CLIENT PAR CLIENT"):
+    with st.expander("VOIR LE DÉTAIL CLIENT PAR CLIENT"):
         display_cols = [c for c in df_result.columns if c not in _FINAL_FEATURES]
         st.dataframe(df_result[display_cols], use_container_width=True, hide_index=True)
