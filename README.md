@@ -4,6 +4,14 @@
 
 ---
 
+## 🚀 Dashboard en ligne
+
+**[https://olist-segmentation-okgrrwjcwq-ew.a.run.app/](https://olist-segmentation-okgrrwjcwq-ew.a.run.app/)**
+
+Dashboard Streamlit déployé sur Google Cloud Run — accès immédiat, sans installation.
+
+---
+
 ## Le contexte
 
 Olist est la principale marketplace e-commerce du Brésil, connectant des milliers de vendeurs indépendants à des millions d'acheteurs. Avec un dataset de **93 358 clients uniques**, **100 000+ commandes** et **8 millions de lignes de données relationnelles**, Olist dispose d'une mine d'informations comportementales — encore trop peu exploitée par les équipes marketing.
@@ -85,24 +93,25 @@ olist-customer-segmentation/
 ├── .github/workflows/
 │   ├── ci.yml                     # Tests + black à chaque push
 │   ├── cd.yml                     # Build Docker + deploy Cloud Run (push main)
-│   ├── retrain.yml                # Réentraînement automatique (1er du mois, 3h UTC)
+│   ├── retrain.yml                # Réentraînement trimestriel (janv/avr/juil/oct)
 │   └── ingest.yml                 # Ingestion + retrain sur ajout dans data/incoming/
 │
 ├── data/
-│   ├── raw/                       # CSVs Kaggle (non versionnés)
+│   ├── raw/                       # CSVs Kaggle (non versionnés — .gitignore)
 │   ├── processed/                 # Parquets générés (versionnés)
 │   └── incoming/                  # Nouvelles commandes à ingérer (versionnés)
 │
 ├── models/                        # Modèles sérialisés .pkl + métadonnées .json
 │
 ├── notebooks/                     # Pipeline ML — exécuter dans l'ordre
-│   ├── 01_eda.ipynb
-│   ├── 02_preprocessing_fe.ipynb
-│   ├── 03_clustering.ipynb
-│   └── 04_simulation.ipynb        # Stabilité temporelle
+│   ├── 00_data_presentation.ipynb # Présentation de la base (head par table)
+│   ├── 01_eda.ipynb               # Analyse exploratoire
+│   ├── 02_preprocessing_fe.ipynb  # Feature engineering (10 features → 9 retenues)
+│   ├── 03_clustering.ipynb        # Comparaison 6 algos + recommandations produits + profil socio-démo
+│   └── 04_simulation.ipynb        # Stabilité temporelle → fréquence de réentraînement
 │
 ├── src/                           # Modules de production
-│   ├── data_loader.py             # Connexion PostgreSQL (local ou Neon)
+│   ├── data_loader.py             # Connexion PostgreSQL (local Docker ou Neon cloud)
 │   ├── features.py                # build_customer_features(), scale_features()
 │   ├── model_utils.py             # save_model(), load_model(), assign_clusters()
 │   └── artifact_store.py          # Upload / download artefacts GCS
@@ -175,97 +184,168 @@ Si amélioré → Upload GCS → Dashboard mis à jour
 
 ---
 
-## Prérequis
+## Reproduire le projet localement
 
-- Python 3.10+
-- Docker (pour PostgreSQL local en dev)
-- Compte [Neon.tech](https://neon.tech) — PostgreSQL cloud gratuit
-- Projet Google Cloud Platform actif (Cloud Run + Artifact Registry + GCS)
-- Clé API Gemini (optionnel — pour l'analyse IA)
+> Temps estimé : **30–45 minutes** (hors téléchargement Kaggle)
+
+### Prérequis
+
+Avant de commencer, s'assurer d'avoir installé :
+
+- **Python 3.10+** — [python.org](https://www.python.org/downloads/)
+- **Docker Desktop** — [docker.com](https://www.docker.com/products/docker-desktop/) (pour PostgreSQL local)
+- **Git**
+
+Les services cloud (Neon, GCS, Gemini) sont **optionnels** pour faire tourner les notebooks localement. Ils sont nécessaires uniquement pour le déploiement production.
 
 ---
 
-## Installation locale (développement)
-
-### 1. Cloner le dépôt
+### Étape 1 — Cloner le dépôt
 
 ```bash
 git clone https://github.com/AliouneKane/olist-customer-segmentation.git
 cd olist-customer-segmentation
 ```
 
-### 2. Environnement virtuel
+---
+
+### Étape 2 — Environnement virtuel & dépendances
 
 ```bash
 python3.10 -m venv venv
-source venv/bin/activate          # macOS/Linux
-# venv\Scripts\activate           # Windows
+source venv/bin/activate        # macOS / Linux
+# venv\Scripts\activate         # Windows
+
 pip install -r requirements.txt
 ```
 
-### 3. Variables d'environnement
+---
 
-Créer `.env` à la racine :
+### Étape 3 — Variables d'environnement
+
+Créer le fichier `.env` à la racine du projet :
 
 ```env
-# Gemini AI (optionnel)
-GEMINI_API_KEY=your_gemini_api_key
-
-# PostgreSQL local (docker-compose — dev uniquement)
+# ── PostgreSQL local (Docker — obligatoire pour les notebooks) ──────────────
 POSTGRES_HOST=localhost
 POSTGRES_PORT=5444
 POSTGRES_DB=olist_db
 POSTGRES_USER=olist_user
 POSTGRES_PASSWORD=olist_password
 
-# Neon.tech (cloud PostgreSQL — production & CI)
-DATABASE_URL=postgresql://user:password@host/neondb?sslmode=require
+# ── Neon PostgreSQL (cloud — uniquement pour le déploiement production) ──────
+# DATABASE_URL=postgresql://user:password@host/neondb?sslmode=require
 
-# Google Cloud Storage
-GCS_BUCKET=your-gcs-bucket-name
-GCP_PROJECT=your-gcp-project-id
-GOOGLE_APPLICATION_CREDENTIALS=gcp-key.json  # clé locale du service account
+# ── Gemini AI (optionnel — pour les insights IA du dashboard) ────────────────
+# GEMINI_API_KEY=your_gemini_api_key
+
+# ── Google Cloud Storage (optionnel — uniquement pour le déploiement) ────────
+# GCS_BUCKET=your-gcs-bucket-name
+# GCP_PROJECT=your-gcp-project-id
 ```
 
-> ⚠️ Ne jamais commiter `.env` ou `gcp-key.json` — ils sont dans `.gitignore`.
+> ⚠️ **Important :** Laisser `DATABASE_URL` commenté en local. Si elle est définie, `data_loader.py` se connecte à Neon (cloud) au lieu du Docker local, ce qui fait échouer les notebooks sans accès internet au serveur Neon.
 
-### 4. Données brutes (Kaggle)
+---
 
-Télécharger [Brazilian E-Commerce Public Dataset](https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce) et décompresser dans `data/raw/`.
+### Étape 4 — Télécharger les données Kaggle
 
-### 5. Démarrer PostgreSQL local
+1. Aller sur [Brazilian E-Commerce Public Dataset](https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce)
+2. Télécharger et décompresser les CSV dans `data/raw/`
+
+Structure attendue dans `data/raw/` :
+
+```
+data/raw/
+├── olist_orders_dataset.csv
+├── olist_customers_dataset.csv
+├── olist_order_items_dataset.csv
+├── olist_products_dataset.csv
+├── olist_sellers_dataset.csv
+├── olist_order_payments_dataset.csv
+├── olist_order_reviews_dataset.csv
+├── olist_geolocation_dataset.csv
+└── product_category_name_translation.csv
+```
+
+---
+
+### Étape 5 — Démarrer PostgreSQL local (Docker)
 
 ```bash
 docker-compose up -d
-python src/data_loader.py          # ingère les CSV dans PostgreSQL local
 ```
 
-### 6. Générer les artefacts ML
+Vérifier que le conteneur tourne :
 
 ```bash
-# Option A — script direct (recommandé, sans Jupyter)
-python scripts/generate_artifacts.py
-
-# Option B — notebooks dans l'ordre
-jupyter notebook
+docker ps
+# → olist_postgres   Up X minutes   0.0.0.0:5444->5432/tcp
 ```
 
-### 7. Lancer le dashboard
+Charger les données CSV dans PostgreSQL :
+
+```bash
+python src/data_loader.py
+```
+
+Cette commande lit les CSV de `data/raw/` et les insère dans les 9 tables PostgreSQL. Durée : ~2–5 minutes.
+
+---
+
+### Étape 6 — Exécuter les notebooks dans l'ordre
+
+Lancer Jupyter :
+
+```bash
+jupyter notebook
+# ou
+jupyter lab
+```
+
+Ouvrir et exécuter les notebooks **dans cet ordre** :
+
+| # | Notebook | Contenu | Durée |
+|---|----------|---------|-------|
+| 0 | `00_data_presentation.ipynb` | Présentation des 9 tables (head, colonnes, stats) | ~2 min |
+| 1 | `01_eda.ipynb` | Analyse exploratoire — qualité, distributions, cohortes | ~5 min |
+| 2 | `02_preprocessing_fe.ipynb` | Feature engineering — 10 features, StandardScaler, export parquets | ~5 min |
+| 3 | `03_clustering.ipynb` | Comparaison 6 algorithmes, sélection KMeans k=4, recommandations produits, profil socio-démo | ~15 min |
+| 4 | `04_simulation.ipynb` | Stabilité temporelle, fréquence de réentraînement | ~5 min |
+
+> **Note :** Le notebook 03 peut prendre plus de temps selon la puissance de la machine (UMAP sur 93k clients).
+
+Les notebooks génèrent automatiquement dans `data/processed/` :
+- `customer_features_raw.parquet`
+- `customer_features_scaled.parquet`
+- `customer_features_labeled.parquet`
+- `cluster_profile.parquet`
+
+Et dans `models/` :
+- `best_clustering_kmeans_k4.pkl` + métadonnées `.json`
+
+---
+
+### Étape 7 — Lancer le dashboard en local
 
 ```bash
 streamlit run streamlit_app/main.py
 ```
 
-Ouvrir **http://localhost:8501**
+Ouvrir **[http://localhost:8501](http://localhost:8501)**
+
+> Le dashboard charge les artefacts depuis `models/` et `data/processed/` en local. GCS n'est pas requis.
 
 **Pages disponibles :**
 - **Vue d'ensemble** — KPIs globaux, distribution, heatmap
 - **Détail Segment** — radar, recommandations marketing, plan IA Gemini
 - **Comparaison** — benchmark des 6 algorithmes
-- **Prédiction Clients** — upload CSV/Excel de nouveaux clients → prédiction segment → plan d'action
+- **Prédiction Clients** — upload CSV/Excel → prédiction segment → plan d'action
 - **Guide** — mode d'emploi équipe métier
 
-### 8. Tests
+---
+
+### Étape 8 — Tests
 
 ```bash
 pytest tests/ -v
@@ -313,9 +393,9 @@ docker run -p 8080:8080 --env-file .env olist-segmentation
 
 ## Réentraînement automatique
 
-Le modèle se réentraîne automatiquement le **1er de chaque mois à 3h UTC** via `.github/workflows/retrain.yml`.
+Le modèle se réentraîne automatiquement **tous les trimestres** (1er janvier, avril, juillet, octobre à 3h UTC) via `.github/workflows/retrain.yml`.
 
-**Déclenchement manuel** (depuis GitHub → Actions → "Monthly Model Retrain" → Run workflow)
+**Déclenchement manuel** (depuis GitHub → Actions → "Quarterly Model Retrain" → Run workflow)
 
 **Logique de décision :**
 - Nouveau silhouette ≥ silhouette actuel − 0.005 → artefacts mis à jour sur GCS
@@ -325,13 +405,11 @@ Le modèle se réentraîne automatiquement le **1er de chaque mois à 3h UTC** v
 
 ---
 
-## Ingestion de nouvelles données (démo end-to-end)
+## Ingestion de nouvelles données
 
 Pour ajouter de nouvelles commandes et déclencher automatiquement le réentraînement :
 
-### 1. Préparer le fichier de nouvelles commandes
-
-Copier et remplir le template :
+### 1. Préparer le fichier
 
 ```bash
 cp data/incoming/template_nouvelles_commandes.csv data/incoming/commandes_MOIS_ANNEE.csv
@@ -347,12 +425,12 @@ cp data/incoming/template_nouvelles_commandes.csv data/incoming/commandes_MOIS_A
 | `customer_state` | État brésilien (2 lettres) | `SP` |
 | `order_purchase_date` | Date d'achat | `2026-05-01 10:00:00` |
 | `order_delivered_date` | Date de livraison | `2026-05-08 14:00:00` |
-| `order_estimated_delivery_date` | Date de livraison estimée | `2026-05-10 00:00:00` |
+| `order_estimated_delivery_date` | Date estimée | `2026-05-10 00:00:00` |
 | `price` | Montant produit (BRL) | `320.00` |
 | `freight_value` | Frais de port (BRL) | `18.50` |
 | `payment_type` | `credit_card`, `boleto`, `debit_card`, `voucher` | `credit_card` |
 | `payment_installments` | Nombre de versements | `3` |
-| `payment_value` | Montant total payé (BRL) | `338.50` |
+| `payment_value` | Montant total (BRL) | `338.50` |
 | `review_score` | Note satisfaction (1–5) | `5` |
 
 ### 2. Pusher sur GitHub
@@ -396,7 +474,7 @@ orders → customers → geolocation    ┘
 | `Frequency` | Nombre total de commandes |
 | `Monetary` | Montant total dépensé (BRL) |
 
-**Features du profil segment (dashboard) :**
+**Features du profil segment (dashboard uniquement — non utilisées pour le clustering) :**
 
 | Feature | Description |
 |---------|-------------|
@@ -406,22 +484,8 @@ orders → customers → geolocation    ┘
 | `avg_installments` | Nombre moyen de versements |
 | `payment_type_cc_flag` | 1 = carte de crédit dominante |
 | `region_freight_score` | Score logistique régional (1 = Sul, 5 = Norte) |
+| `category_tier_encoded` | Macro-segment produit dominant (ordinal 1–10) |
 | `CLV_proxy` | Monetary × Frequency |
-
----
-
-## Page Prédiction Clients
-
-La page **Prédiction Clients** permet à l'équipe marketing d'uploader un fichier CSV ou Excel de nouveaux clients prospects et d'obtenir :
-
-1. **Segmentation automatique** — chaque client classé Budget ou Premium
-2. **Interprétation métier** — qualité d'acquisition de la campagne en langage simple
-3. **Plan d'action** — 4 actions concrètes selon le profil détecté
-
-**Colonnes requises dans le fichier upload :**
-`Recency`, `Monetary`, `Frequency`, `avg_review_score`, `avg_freight_ratio`, `avg_delivery_delay`, `avg_installments`
-
-**Colonnes optionnelles :** `payment_type`, `customer_state`, `customer_id`
 
 ---
 
