@@ -12,6 +12,14 @@ Dashboard Streamlit déployé sur Google Cloud Run — accès immédiat, sans in
 
 ---
 
+## 📊 Présentation du projet
+
+**[https://canva.link/zfsgzh7axdnwjaw](https://canva.link/zfsgzh7axdnwjaw)**
+
+Slides de présentation complètes — contexte, méthodologie, résultats et recommandations marketing.
+
+---
+
 ## Le contexte
 
 Olist est la principale marketplace e-commerce du Brésil, connectant des milliers de vendeurs indépendants à des millions d'acheteurs. Avec un dataset de **93 358 clients uniques**, **100 000+ commandes** et **8 millions de lignes de données relationnelles**, Olist dispose d'une mine d'informations comportementales — encore trop peu exploitée par les équipes marketing.
