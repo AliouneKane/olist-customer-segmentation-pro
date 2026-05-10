@@ -61,12 +61,6 @@ Les équipes marketing opèrent sans visibilité claire sur la diversité des pr
 
 *Intro narrative avec les 3 insights critiques (Acheteurs Premium, Dormants Premium, Acheteurs Budget), KPIs globaux, distribution par segment et heatmap des comportements.*
 
-### Vue d'Ensemble — Métriques détaillées
-
-![Vue d'ensemble — KPIs](docs/screenshots/02_overview_kpis.png)
-
-*Distribution des 4 segments, comparaison des métriques clés (Recency, Monetary, Frequency) et heatmap des centroides.*
-
 ### Détail Segment
 
 ![Détail Segment — Acheteurs Premium](docs/screenshots/03_segment_detail.png)
