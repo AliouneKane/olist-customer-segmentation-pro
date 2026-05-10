@@ -47,3 +47,8 @@ Thumbs.db
 
 # ── Streamlit secrets ─────────────────────────────────────────────────────────
 .streamlit/secrets.toml
+
+# Reports and generation scripts
+reports/
+scripts/generate_simulation_docx.py
+scripts/generate_simulation_pdf.py
