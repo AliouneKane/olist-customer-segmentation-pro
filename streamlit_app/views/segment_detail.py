@@ -1,4 +1,4 @@
-"""Segment Detail page — deep dive into a single cluster."""
+"""Segment Detail page : deep dive into a single cluster."""
 
 from __future__ import annotations
 
@@ -70,7 +70,7 @@ def _recommendation_card(cluster_id: int) -> None:
                 <span style="background:{color}; color:#FFFFFF; padding:2px 8px;
                              border-radius:4px; font-size:0.72rem; font-weight:800;
                              letter-spacing:0.05em; margin-right:8px;">{code}</span>
-                Stratégie — {name}
+                Stratégie : {name}
             </div>
             <div style="
                 background:{color}0d;
@@ -123,7 +123,7 @@ def _ai_insight_section(cluster_id: int, profile_df) -> None:
 
         if not _GEMINI_AVAILABLE:
             st.info(
-                "IA indisponible — configurez `GEMINI_API_KEY` dans `.env`.",
+                "IA indisponible : configurez `GEMINI_API_KEY` dans `.env`.",
                 icon=":material/smart_toy:",
             )
             return
@@ -180,7 +180,7 @@ def render(cluster_id: int) -> None:
     """Renders the Segment Detail page for a given cluster.
 
     Args:
-        cluster_id: Cluster label (0–5).
+        cluster_id: Cluster label (0-5).
     """
     try:
         profile_df = load_cluster_profile()
@@ -194,7 +194,7 @@ def render(cluster_id: int) -> None:
     # Header
     st.markdown(
         f"<h2 style='margin-bottom:0.2rem;'>"
-        f"Segment — <span style='color:{color};'>{name}</span></h2>"
+        f"Segment : <span style='color:{color};'>{name}</span></h2>"
         f"<p style='color:#6b7280; margin-bottom:1.25rem;'>"
         f"Cluster {cluster_id} · Analyse détaillée du profil et recommandations marketing</p>",
         unsafe_allow_html=True,
@@ -279,23 +279,23 @@ def render(cluster_id: int) -> None:
             <div style="background:#FFFFFF; border:1px solid #e5e7eb;
                         border-top:4px solid {color}; border-radius:8px;
                         padding:1rem; box-shadow:0 1px 3px #d1d5db;">
-                {_ads_row("Age", targeting.get("age", "—"))}
-                {_ads_row("Genre", targeting.get("genre", "—"))}
-                {_ads_row("Localisation", targeting.get("localisation", "—"))}
-                {_ads_row("Revenu", targeting.get("revenu", "—"))}
-                {_ads_row("Comportement", targeting.get("comportements", "—"))}
+                {_ads_row("Age", targeting.get("age", "-"))}
+                {_ads_row("Genre", targeting.get("genre", "-"))}
+                {_ads_row("Localisation", targeting.get("localisation", "-"))}
+                {_ads_row("Revenu", targeting.get("revenu", "-"))}
+                {_ads_row("Comportement", targeting.get("comportements", "-"))}
                 <div style="margin-top:10px; margin-bottom:4px; font-size:0.75rem;
                             font-weight:700; color:#9ca3af; text-transform:uppercase;
-                            letter-spacing:0.06em;">Facebook Ads — Intérêts</div>
+                            letter-spacing:0.06em;">Facebook Ads : Intérêts</div>
                 <ul style="padding-left:1.1rem; margin:0 0 8px 0;">{fb_list}</ul>
                 <div style="margin-bottom:4px; font-size:0.75rem; font-weight:700;
                             color:#9ca3af; text-transform:uppercase;
-                            letter-spacing:0.06em;">Google Ads — Audiences</div>
+                            letter-spacing:0.06em;">Google Ads : Audiences</div>
                 <ul style="padding-left:1.1rem; margin:0 0 8px 0;">{google_list}</ul>
                 <div style="background:{color}0d; border-left:3px solid {color};
                             padding:7px 10px; border-radius:0 6px 6px 0;
                             font-size:0.8rem; color:#374151; font-style:italic;">
-                    Message clé : {targeting.get("message_cle", "—")}
+                    Message clé : {targeting.get("message_cle", "-")}
                 </div>
             </div>
             """,
@@ -304,7 +304,7 @@ def render(cluster_id: int) -> None:
 
     st.divider()
 
-    # Progress bar — CLV vs. Champions target
+    # Progress bar : CLV vs. Champions target
     row = profile_df[profile_df["cluster"] == cluster_id]
     if not row.empty and "CLV_proxy" in profile_df.columns:
         clv = float(row.iloc[0]["CLV_proxy"])
@@ -324,10 +324,10 @@ def render(cluster_id: int) -> None:
 
     st.divider()
 
-    # Bar chart — segment vs. all
+    # Bar chart : segment vs. all
     st.markdown(
         f"<h3 style='color:{OLIST_BLUE}; margin-bottom:0.75rem;'>"
-        "Comparaison Monetary — Ce Segment vs. Tous</h3>",
+        "Comparaison Monetary : Ce Segment vs. Tous</h3>",
         unsafe_allow_html=True,
     )
     fig = bar_segment_comparison(profile_df, "Monetary")

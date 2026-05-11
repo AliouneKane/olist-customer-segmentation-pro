@@ -1,7 +1,7 @@
 """Gemini-powered action plan for each cluster.
 
 Generates a short list of very specific, immediately actionable tasks
-for the marketing team — distinct from the high-level recommendations
+for the marketing team : distinct from the high-level recommendations
 already shown in the Strategy card.
 
 Requires GEMINI_API_KEY in .env (or as environment variable).
@@ -63,7 +63,7 @@ def _build_prompt(cluster_id: int, profile_row: dict) -> str:
 
     return f"""Tu es responsable CRM et e-merchandising chez Olist, la principale marketplace brésilienne.
 
-Profil médian du segment **{segment_name}** — Cluster {cluster_id} ({n:,} clients, {pct:.1f}% de la base) :
+Profil médian du segment **{segment_name}** : Cluster {cluster_id} ({n:,} clients, {pct:.1f}% de la base) :
 
 Comportement d'achat :
 - Récence : {recency:.0f} jours depuis le dernier achat
@@ -92,12 +92,12 @@ Règles impératives :
 - Chaque tâche commence par un verbe d'action (Envoyer, Créer, Lancer, Mettre en avant…)
 - Chaque tâche est spécifique : inclure un produit ou une catégorie réelle, un chiffre, un délai ou un canal
 - Alterner entre actions sur la fréquence de contact et actions sur les produits à pousser
-- Écrire en français simple, clair, compréhensible par quelqu'un sans formation marketing — \
+- Écrire en français simple, clair, compréhensible par quelqu'un sans formation marketing : \
 pas de jargon, pas d'anglais, pas de termes techniques
 - Chaque tâche doit pouvoir être comprise et exécutée par n'importe quel membre de l'équipe
 - Maximum 25 mots par tâche
 
-Format de réponse — uniquement cette liste numérotée, rien d'autre :
+Format de réponse : uniquement cette liste numérotée, rien d'autre :
 1. [tâche]
 2. [tâche]
 3. [tâche]

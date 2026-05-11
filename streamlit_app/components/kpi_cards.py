@@ -1,4 +1,4 @@
-"""KPI metric row components — style_metric_cards template pattern."""
+"""KPI metric row components : style_metric_cards template pattern."""
 
 from __future__ import annotations
 

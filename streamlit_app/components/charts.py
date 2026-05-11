@@ -1,6 +1,6 @@
 """Plotly chart functions for the Olist dashboard.
 
-Each function takes a DataFrame and returns a go.Figure — no side effects.
+Each function takes a DataFrame and returns a go.Figure : no side effects.
 """
 
 from __future__ import annotations
@@ -52,7 +52,7 @@ def bar_segment_comparison(profile_df: pd.DataFrame, metric_col: str) -> go.Figu
         y=metric_col,
         color="segment_label",
         color_discrete_sequence=_PALETTE,
-        title=f"Comparaison des Segments — {metric_col}",
+        title=f"Comparaison des Segments : {metric_col}",
         labels={"segment_label": "Segment", metric_col: metric_col},
         text_auto=".2f",
     )
@@ -193,7 +193,7 @@ def heatmap_cluster_features(
 
 
 def table_algorithm_comparison(comparison_df: pd.DataFrame) -> go.Figure:
-    """Plotly table of algorithm metrics — best composite_score row highlighted in green."""
+    """Plotly table of algorithm metrics : best composite_score row highlighted in green."""
     cols_to_show = [
         c
         for c in [

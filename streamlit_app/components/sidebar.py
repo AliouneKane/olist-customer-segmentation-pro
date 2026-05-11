@@ -1,4 +1,4 @@
-"""Sidebar navigation using native st.button() — navigation state in session_state."""
+"""Sidebar navigation using native st.button() : navigation state in session_state."""
 
 from __future__ import annotations
 
@@ -67,7 +67,7 @@ def render_sidebar() -> tuple[str, int]:
             unsafe_allow_html=True,
         )
 
-        # Nav buttons — primary style = active page
+        # Nav buttons : primary style = active page
         current = st.session_state["current_page"]
         for page in _PAGES:
             is_active = page["name"] == current
@@ -101,7 +101,7 @@ def render_sidebar() -> tuple[str, int]:
             label="segment",
             options=options,
             index=current_cluster,
-            format_func=lambda c: f"{_SEGMENT_CODES[c]} — {_SEGMENT_LABELS[c]}",
+            format_func=lambda c: f"{_SEGMENT_CODES[c]} : {_SEGMENT_LABELS[c]}",
             label_visibility="collapsed",
             key="sidebar_cluster_selector",
         )

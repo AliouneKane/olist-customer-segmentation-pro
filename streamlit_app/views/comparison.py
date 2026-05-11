@@ -1,4 +1,4 @@
-"""Algorithm Comparison page — benchmark clustering algorithms."""
+"""Algorithm Comparison page : benchmark clustering algorithms."""
 
 from __future__ import annotations
 
@@ -40,7 +40,7 @@ def render() -> None:
         )
         return
 
-    # Best algorithm banner — prefer ★-marked row (production choice) over raw composite max
+    # Best algorithm banner : prefer ★-marked row (production choice) over raw composite max
     if "composite_score" in comparison_df.columns:
         star_mask = comparison_df["algorithm"].str.contains("★", na=False)
         best = (
@@ -48,7 +48,7 @@ def render() -> None:
             if star_mask.any()
             else comparison_df.loc[comparison_df["composite_score"].idxmax()]
         )
-        algo = best.get("algorithm", "—").replace(" ★", " ★")
+        algo = best.get("algorithm", "-").replace(" ★", " ★")
         k = int(best.get("n_clusters", best.get("k", 0)))
         sil = float(best.get("silhouette", 0))
 

@@ -1,4 +1,4 @@
-"""Olist Customer Segmentation — Streamlit Dashboard.
+"""Olist Customer Segmentation : Streamlit Dashboard.
 
 Entry point. Page routing via st.session_state + sidebar buttons.
 
@@ -18,7 +18,7 @@ if str(_PROJECT_ROOT) not in sys.path:
 import streamlit as st
 
 st.set_page_config(
-    page_title="Olist — Customer Segmentation",
+    page_title="Olist : Customer Segmentation",
     page_icon=None,
     layout="wide",
     initial_sidebar_state="expanded",

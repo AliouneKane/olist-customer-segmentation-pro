@@ -1,4 +1,4 @@
-"""Guide du Dashboard — page d'aide pour les non-techniciens.
+"""Guide du Dashboard : page d'aide pour les non-techniciens.
 
 Explique chaque métrique, chaque segment, comment lire les graphiques,
 et quoi regarder en priorité.
@@ -55,7 +55,7 @@ def _segment_card(
                     border-radius:8px; padding:1rem 1.2rem;
                     margin-bottom:0.75rem; box-shadow:0 1px 3px #f3f4f6;">
             <div style="font-size:0.95rem; font-weight:700; color:{color}; margin-bottom:8px;">
-                {icon} Cluster {cluster_id} — {name}
+                {icon} Cluster {cluster_id} : {name}
             </div>
             <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px;">
                 <div>
@@ -104,7 +104,7 @@ def render() -> None:
             <p style="color:rgba(255,255,255,0.85); font-size:0.9rem;
                       max-width:580px; line-height:1.7; margin:0;">
                 Ce guide explique chaque chiffre, chaque graphique et chaque segment
-                en langage clair — pensé pour les équipes marketing et métier,
+                en langage clair : pensé pour les équipes marketing et métier,
                 sans prérequis technique.
             </p>
         </div>
@@ -211,7 +211,7 @@ def render() -> None:
             definition="Écart moyen en jours entre la date estimée et la date réelle de livraison. "
             "Négatif = livré en avance. Positif = livré en retard.",
             how_to_read="Une valeur <strong>négative</strong> (ex. -3j) signifie que les "
-            "livraisons arrivent <em>avant</em> la date promise — c'est une bonne "
+            "livraisons arrivent <em>avant</em> la date promise : c'est une bonne "
             "performance. Une valeur positive indique un retard moyen.",
         )
         _metric_card(
@@ -219,7 +219,7 @@ def render() -> None:
             icon="🚛",
             definition="Part des frais de livraison rapportée à la valeur totale de la commande.",
             how_to_read="Un ratio élevé (ex. 50 %+) signifie que la livraison coûte "
-            "plus que la moitié du panier — c'est rédhibitoire et bloque les rachats. "
+            "plus que la moitié du panier : c'est rédhibitoire et bloque les rachats. "
             "Les Dormants Budget (Nordeste / Norte) subissent des frais de port élevés "
             "qui expliquent en partie leur inactivité.",
         )
@@ -244,7 +244,7 @@ def render() -> None:
             how_to_read="Plus ce chiffre est élevé, plus le client est <strong>précieux</strong>. "
             "Les Acheteurs Premium (Cluster 2) ont le CLV actif le plus élevé. "
             "Les Dormants Premium (Cluster 3) ont aussi un fort CLV historique "
-            "— chaque client réactivé dans ce segment a une valeur 2–3× supérieure à la moyenne.",
+            "- chaque client réactivé dans ce segment a une valeur 2-3× supérieure à la moyenne.",
         )
         _metric_card(
             "Mode de paiement (payment_type_cc_flag)",
@@ -277,7 +277,7 @@ def render() -> None:
                         border-radius:10px; padding:1rem 1.2rem; margin-bottom:0.75rem;">
                 <div style="font-weight:700; color:{OLIST_BLUE};
                             font-size:0.9rem; margin-bottom:8px;">
-                    🥧 Camembert — Répartition des segments
+                    🥧 Camembert : Répartition des segments
                 </div>
                 <div style="font-size:0.82rem; color:#374151; line-height:1.6;">
                     Chaque part représente le <strong>pourcentage de clients</strong>
@@ -289,7 +289,7 @@ def render() -> None:
                         border-radius:10px; padding:1rem 1.2rem; margin-bottom:0.75rem;">
                 <div style="font-weight:700; color:{OLIST_BLUE};
                             font-size:0.9rem; margin-bottom:8px;">
-                    Barres — Comparaison par métrique
+                    Barres : Comparaison par métrique
                 </div>
                 <div style="font-size:0.82rem; color:#374151; line-height:1.6;">
                     Chaque barre = valeur <strong>médiane</strong> du segment (pas la moyenne).
@@ -309,7 +309,7 @@ def render() -> None:
                         border-radius:10px; padding:1rem 1.2rem; margin-bottom:0.75rem;">
                 <div style="font-weight:700; color:{OLIST_BLUE};
                             font-size:0.9rem; margin-bottom:8px;">
-                    🕸️ Radar — Profil multidimensionnel
+                    🕸️ Radar : Profil multidimensionnel
                 </div>
                 <div style="font-size:0.82rem; color:#374151; line-height:1.6;">
                     Le radar montre <strong>7 dimensions</strong> en même temps, normalisées
@@ -322,7 +322,7 @@ def render() -> None:
                         border-radius:10px; padding:1rem 1.2rem; margin-bottom:0.75rem;">
                 <div style="font-weight:700; color:{OLIST_BLUE};
                             font-size:0.9rem; margin-bottom:8px;">
-                    🌡️ Heatmap — Vue d'ensemble rapide
+                    🌡️ Heatmap : Vue d'ensemble rapide
                 </div>
                 <div style="font-size:0.82rem; color:#374151; line-height:1.6;">
                     Chaque cellule = valeur médiane brute. <strong>Vert = élevé, Rouge = faible</strong>
@@ -343,8 +343,8 @@ def render() -> None:
         "C2",
         who="24 % de la base (18 546 clients). Récents (~131j), panier élevé (~180 BRL). "
         "Beauté premium, électronique, mode. Paient par carte de crédit.",
-        priority="PRIORITÉ ABSOLUE — nurturing immédiat pour créer l'habitude d'achat.",
-        action="Email de nurturing J+30 + offre –10 % valable 45 jours + invitation programme VIP.",
+        priority="PRIORITÉ ABSOLUE : nurturing immédiat pour créer l'habitude d'achat.",
+        action="Email de nurturing J+30 + offre -10 % valable 45 jours + invitation programme VIP.",
     )
     _segment_card(
         3,
@@ -352,16 +352,16 @@ def render() -> None:
         "C3",
         who="23 % de la base (17 470 clients). Inactifs depuis ~367 jours, mais panier élevé (~160 BRL). "
         "Électronique, mobilier, montres. Paient par carte en plusieurs fois.",
-        priority="Réactivation urgente — chaque mois supplémentaire réduit les chances de retour.",
-        action="Email 'Vous nous manquez' + offre exclusive –20 % valable 30 jours.",
+        priority="Réactivation urgente : chaque mois supplémentaire réduit les chances de retour.",
+        action="Email 'Vous nous manquez' + offre exclusive -20 % valable 30 jours.",
     )
     _segment_card(
         0,
         "Acheteurs Budget",
         "C0",
-        who="28 % de la base (21 146 clients) — le groupe le plus nombreux. Récents (~124j) "
+        who="28 % de la base (21 146 clients) : le groupe le plus nombreux. Récents (~124j) "
         "mais petit panier (~64 BRL). Beauté, maison, articles pour enfants.",
-        priority="Volume — activer la récurrence par des promotions régulières.",
+        priority="Volume : activer la récurrence par des promotions régulières.",
         action="Newsletter promo hebdomadaire + programme de fidélité points.",
     )
     _segment_card(
@@ -369,8 +369,8 @@ def render() -> None:
         "Dormants Budget",
         "C1",
         who="25 % de la base (18 775 clients). Inactifs depuis ~292 jours, petit panier (~72 BRL). "
-        "Souvent dans Nordeste / Norte — frais de port élevés, peu de moyens.",
-        priority="ROI faible — investissement minimal uniquement.",
+        "Souvent dans Nordeste / Norte : frais de port élevés, peu de moyens.",
+        priority="ROI faible : investissement minimal uniquement.",
         action="Email automatisé simple (sans remise élevée). Archiver après 60j sans réaction.",
     )
 
@@ -402,7 +402,7 @@ def render() -> None:
                     <td style="padding:9px 14px;">Dormants Premium (C3)</td>
                     <td style="padding:9px 14px;">Court terme (30j)</td>
                     <td style="padding:9px 14px;">Réactivation premium</td>
-                    <td style="padding:9px 14px;">Récupérer 20–30 % d'inactifs à fort panier</td>
+                    <td style="padding:9px 14px;">Récupérer 20-30 % d'inactifs à fort panier</td>
                 </tr>
                 <tr style="background:#f0fdf4;">
                     <td style="padding:9px 14px; font-weight:700;">🥉 #3</td>
@@ -416,7 +416,7 @@ def render() -> None:
                     <td style="padding:9px 14px;">Dormants Budget (C1)</td>
                     <td style="padding:9px 14px;">Minimal</td>
                     <td style="padding:9px 14px;">Email automatisé uniquement</td>
-                    <td style="padding:9px 14px;">Budget minimal — archiver si pas de réaction à 60j</td>
+                    <td style="padding:9px 14px;">Budget minimal : archiver si pas de réaction à 60j</td>
                 </tr>
             </tbody>
         </table>

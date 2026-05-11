@@ -26,10 +26,10 @@ BORDER_LIGHT = "#e5e7eb"
 GRID_COLOR = "#e5e7eb"
 
 SEGMENT_COLORS = [
-    "#f59e0b",  # 0 — Acheteurs Budget  (amber)
-    "#6b7280",  # 1 — Dormants Budget   (gray)
-    "#0041FF",  # 2 — Acheteurs Premium (Olist blue)
-    "#0ea5e9",  # 3 — Dormants Premium  (sky blue)
+    "#f59e0b",  # 0 : Acheteurs Budget  (amber)
+    "#6b7280",  # 1 : Dormants Budget   (gray)
+    "#0041FF",  # 2 : Acheteurs Premium (Olist blue)
+    "#0ea5e9",  # 3 : Dormants Premium  (sky blue)
 ]
 
 # CSS injected into every page
@@ -91,7 +91,7 @@ html, body, [class*="css"] {
     color: rgba(255,255,255,0.55) !important;
 }
 
-/* ── Nav buttons in sidebar — secondary = inactive, primary = active ─ */
+/* ── Nav buttons in sidebar : secondary = inactive, primary = active ─ */
 [data-testid="stSidebar"] button[kind="secondary"] {
     background-color: transparent !important;
     color: rgba(255,255,255,0.8) !important;

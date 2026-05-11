@@ -1,4 +1,4 @@
-"""Data loading for the dashboard — all files cached with lru_cache."""
+"""Data loading for the dashboard : all files cached with lru_cache."""
 
 from __future__ import annotations
 

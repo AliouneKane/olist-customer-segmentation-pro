@@ -2,10 +2,10 @@
 
 Cluster profiles (UMAP+KMeans k=4, silhouette=0.4486) on 75 937 clients:
 
-  C0  21 146 (28%) — Recency 124j, Monetary  64 BRL  → Acheteurs Budget  (récents, faible valeur)
-  C1  18 775 (25%) — Recency 292j, Monetary  72 BRL  → Dormants Budget   (inactifs, faible valeur)
-  C2  18 546 (24%) — Recency 131j, Monetary 180 BRL  → Acheteurs Premium (récents, valeur élevée)
-  C3  17 470 (23%) — Recency 367j, Monetary 160 BRL  → Dormants Premium  (inactifs, valeur élevée)
+  C0  21 146 (28%) : Recency 124j, Monetary  64 BRL  → Acheteurs Budget  (récents, faible valeur)
+  C1  18 775 (25%) : Recency 292j, Monetary  72 BRL  → Dormants Budget   (inactifs, faible valeur)
+  C2  18 546 (24%) : Recency 131j, Monetary 180 BRL  → Acheteurs Premium (récents, valeur élevée)
+  C3  17 470 (23%) : Recency 367j, Monetary 160 BRL  → Dormants Premium  (inactifs, valeur élevée)
 
 Segmentation 2×2 : Récence (récent / inactif) × Montant (élevé / faible)
 """
@@ -26,15 +26,15 @@ SEGMENT_AVATARS: dict[int, str] = {
         "avec un budget serré, qui habitent surtout à São Paulo, Minas Gerais ou Rio de Janeiro. "
         "Ils achètent surtout des produits de beauté, des articles pour la maison et des jouets pour enfants. "
         "Ils aiment les promotions et cherchent toujours le meilleur prix. "
-        "C'est notre plus grand groupe de clients — il faut les garder avec des offres régulières."
+        "C'est notre plus grand groupe de clients : il faut les garder avec des offres régulières."
     ),
     1: (
         "Ces clients ont arrêté d'acheter depuis environ 10 mois et dépensaient peu (72 BRL en moyenne). "
         "Ce sont souvent des personnes de 30 à 55 ans, avec peu de moyens, "
-        "qui habitent dans le Nordeste ou dans le Nord du Brésil — des régions où les frais de livraison "
+        "qui habitent dans le Nordeste ou dans le Nord du Brésil : des régions où les frais de livraison "
         "sont élevés, ce qui les décourage souvent de recommander. "
         "Ils achetaient surtout des articles de maison basiques et des vêtements pas chers. "
-        "Il ne faut pas dépenser trop pour les relancer — juste un email simple suffit."
+        "Il ne faut pas dépenser trop pour les relancer : juste un email simple suffit."
     ),
     2: (
         "Ce sont nos meilleurs clients actifs : ils ont acheté il y a environ 4 mois "
@@ -43,7 +43,7 @@ SEGMENT_AVATARS: dict[int, str] = {
         "avec un bon salaire, qui habite à São Paulo, Rio ou dans le Sud du pays. "
         "Ils paient par carte de crédit et achètent des produits de beauté haut de gamme, "
         "des téléphones, des vêtements de marque. "
-        "Ce groupe a le plus grand potentiel — il faut le chouchouter et lui proposer des offres exclusives."
+        "Ce groupe a le plus grand potentiel : il faut le chouchouter et lui proposer des offres exclusives."
     ),
     3: (
         "Ces clients dépensaient bien (160 BRL par commande) mais n'ont plus rien acheté depuis plus d'un an. "
@@ -61,24 +61,24 @@ RECOMMENDATIONS: dict[int, list[str]] = {
         "Promotions flash hebdomadaires et offres 'prix bas garantis' sur les catégories populaires",
         "Programme de fidélité : accumuler des points sur chaque achat pour déclencher la récurrence",
         "Bundles économiques : regrouper des produits pour augmenter le panier sans changer le prix perçu",
-        "Newsletter thématique 'meilleures affaires de la semaine' — fréquence bimensuelle",
+        "Newsletter thématique 'meilleures affaires de la semaine' : fréquence bimensuelle",
     ],
     1: [
         "Campagne de réactivation à coût minimal uniquement (email automatisé, pas de remise élevée)",
-        "Tester une offre symbolique (–5%) pour déclencher un retour sans sacrifier la marge",
+        "Tester une offre symbolique (-5%) pour déclencher un retour sans sacrifier la marge",
         "Après 60 jours sans réaction : exclure définitivement des campagnes actives",
         "Analyser la cause de l'inactivité (mauvaise expérience produit ?) avant tout investissement",
     ],
     2: [
         "Email de nurturing à J+30 : remerciement + recommandations personnalisées basées sur le premier achat",
-        "Offre de deuxième achat : –10% valable 45 jours pour créer l'habitude d'achat",
+        "Offre de deuxième achat : -10% valable 45 jours pour créer l'habitude d'achat",
         "Cross-sell intelligent : proposer des catégories complémentaires à forte affinité",
-        "Inviter à rejoindre le programme VIP — ces clients ont le potentiel de devenir Champions",
+        "Inviter à rejoindre le programme VIP : ces clients ont le potentiel de devenir Champions",
     ],
     3: [
-        "Email de réactivation personnalisé : 'Vous nous manquez' + offre exclusive –20% valable 30 jours",
+        "Email de réactivation personnalisé : 'Vous nous manquez' + offre exclusive -20% valable 30 jours",
         "Rappeler leur dernier achat et proposer des produits complémentaires ou une mise à jour",
-        "Offre dégressive : –15% à J+0, –20% à J+14, –25% à J+28 pour créer l'urgence",
+        "Offre dégressive : -15% à J+0, -20% à J+14, -25% à J+28 pour créer l'urgence",
         "Après 90 jours sans réaction : basculer vers canal SMS ou exclure pour préserver le budget CRM",
     ],
 }
@@ -122,10 +122,10 @@ SEGMENT_PRODUCT_RECS: dict[int, list[str]] = {
 # Socio-demographic & ad targeting profiles for Facebook Ads / Google Ads
 SEGMENT_ADS_TARGETING: dict[int, dict] = {
     0: {
-        "age": "22 – 40 ans",
+        "age": "22-40 ans",
         "genre": "Femme (dominante) · Homme",
         "localisation": "Sudeste (SP, MG, RJ) · Toutes régions urbaines",
-        "revenu": "Classe C — R$ 2 000 – 5 000 / mois",
+        "revenu": "Classe C : R$ 2 000-5 000 / mois",
         "interets_facebook": [
             "Promotions et bons plans",
             "Beauté et soins personnels",
@@ -142,10 +142,10 @@ SEGMENT_ADS_TARGETING: dict[int, dict] = {
         "message_cle": "Prix bas garantis · Livraison rapide · Offres flash",
     },
     1: {
-        "age": "30 – 55 ans",
+        "age": "30-55 ans",
         "genre": "Tous",
         "localisation": "Nordeste (BA, CE, PE) · Norte (PA, AM) · Intérieur",
-        "revenu": "Classe C / D — R$ 1 000 – 3 000 / mois",
+        "revenu": "Classe C / D : R$ 1 000-3 000 / mois",
         "interets_facebook": [
             "Achats en ligne",
             "Comparateurs de prix",
@@ -156,16 +156,16 @@ SEGMENT_ADS_TARGETING: dict[int, dict] = {
             "In-market : Home Furnishings",
             "In-market : Apparel & Accessories",
             "Affinité : Value Shoppers",
-            "Remarketing — inactifs 6–18 mois",
+            "Remarketing : inactifs 6-18 mois",
         ],
-        "comportements": "Inactifs depuis 6–18 mois · Boleto dominant · Peu d'installments",
+        "comportements": "Inactifs depuis 6-18 mois · Boleto dominant · Peu d'installments",
         "message_cle": "On vous a manqué · Offre de retour · Fret réduit pour votre région",
     },
     2: {
-        "age": "25 – 45 ans",
+        "age": "25-45 ans",
         "genre": "Femme (Beauté) · Homme (Tech) · Mix",
         "localisation": "Sudeste (SP, RJ) · Sul (SC, PR) · Capitales",
-        "revenu": "Classe A / B — R$ 5 000+ / mois",
+        "revenu": "Classe A / B : R$ 5 000+ / mois",
         "interets_facebook": [
             "Lifestyle et tendances",
             "Technologie et gadgets",
@@ -182,10 +182,10 @@ SEGMENT_ADS_TARGETING: dict[int, dict] = {
         "message_cle": "Exclusivité · Qualité premium · Livraison express · Programme VIP",
     },
     3: {
-        "age": "30 – 52 ans",
-        "genre": "Mix — légère dominance masculine (Électronique)",
+        "age": "30-52 ans",
+        "genre": "Mix : légère dominance masculine (Électronique)",
         "localisation": "Sudeste (SP, RJ, MG dominant) · Sul",
-        "revenu": "Classe B — R$ 3 000 – 7 000 / mois",
+        "revenu": "Classe B : R$ 3 000-7 000 / mois",
         "interets_facebook": [
             "Technologie et informatique",
             "Maison et décoration haut de gamme",
@@ -196,19 +196,19 @@ SEGMENT_ADS_TARGETING: dict[int, dict] = {
             "In-market : Computers & Peripherals",
             "In-market : Home Improvement",
             "In-market : Jewelry & Watches",
-            "Remarketing — inactifs 12–24 mois · panier élevé",
+            "Remarketing : inactifs 12-24 mois · panier élevé",
         ],
-        "comportements": "Ex-acheteurs premium · Inactifs 12–24 mois · CB installments",
+        "comportements": "Ex-acheteurs premium · Inactifs 12-24 mois · CB installments",
         "message_cle": "Offre exclusive de retour · Nouveautés depuis votre dernier achat",
     },
 }
 
 # Bootstrap color names (used by the legacy Dash build if ever reactivated)
 SEGMENT_COLORS: dict[int, str] = {
-    0: "warning",  # Acheteurs Budget  — amber
-    1: "secondary",  # Dormants Budget   — gray
-    2: "primary",  # Acheteurs Premium — blue
-    3: "info",  # Dormants Premium  — teal
+    0: "warning",  # Acheteurs Budget  : amber
+    1: "secondary",  # Dormants Budget   : gray
+    2: "primary",  # Acheteurs Premium : blue
+    3: "info",  # Dormants Premium  : teal
 }
 
 # Bootstrap Icons identifiers
@@ -245,7 +245,7 @@ def get_recommendation_card(cluster_id: int):  # type: ignore[return]
         [
             dbc.CardHeader(
                 html.H5(
-                    [html.I(className=f"bi {icon} me-2"), f"Stratégie — {name}"],
+                    [html.I(className=f"bi {icon} me-2"), f"Stratégie : {name}"],
                     className="mb-0",
                 ),
                 className=f"bg-{color} text-white",

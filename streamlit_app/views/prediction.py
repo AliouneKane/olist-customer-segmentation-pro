@@ -1,4 +1,4 @@
-"""Prediction page — classify new customers into segments via CSV/Excel upload.
+"""Prediction page : classify new customers into segments via CSV/Excel upload.
 
 The marketing team uploads a file with new customer data (post-campaign).
 The page applies the same feature engineering as training, scales with the
@@ -220,7 +220,7 @@ def _predict_clusters(df_engineered: pd.DataFrame) -> pd.Series | None:
 
 
 def _pie_chart(counts: pd.Series, title: str) -> go.Figure:
-    labels = [f"C{c} — {SEGMENT_NAMES.get(c, str(c))}" for c in counts.index]
+    labels = [f"C{c} : {SEGMENT_NAMES.get(c, str(c))}" for c in counts.index]
     colors = [SEGMENT_COLORS[c % len(SEGMENT_COLORS)] for c in counts.index]
     fig = go.Figure(
         go.Pie(
@@ -240,7 +240,7 @@ def _pie_chart(counts: pd.Series, title: str) -> go.Figure:
 
 def _comparison_bar(new_pct: pd.Series, base_pct: pd.Series) -> go.Figure:
     clusters = sorted(set(new_pct.index) | set(base_pct.index))
-    names = [f"C{c} — {SEGMENT_NAMES.get(c, str(c))}" for c in clusters]
+    names = [f"C{c} : {SEGMENT_NAMES.get(c, str(c))}" for c in clusters]
     colors = [SEGMENT_COLORS[c % len(SEGMENT_COLORS)] for c in clusters]
 
     fig = go.Figure()
@@ -383,7 +383,7 @@ def render() -> None:
                               color:#FFFFFF;">Modèle KMeans k=4 · Sil. 0.449</span>
                 <span style="background:rgba(240,255,0,0.25); border:1px solid rgba(240,255,0,0.5);
                               border-radius:20px; padding:3px 12px; font-size:0.75rem;
-                              color:{OLIST_YELLOW};">Nearest-centroid — sans UMAP requis</span>
+                              color:{OLIST_YELLOW};">Nearest-centroid : sans UMAP requis</span>
             </div>
         </div>
         """,
@@ -403,21 +403,21 @@ def render() -> None:
                             font-size:0.8rem; color:#374151;">
                     <div>
                         <strong>Obligatoires</strong><br>
-                        • <code>Recency</code> — jours depuis dernier achat<br>
-                        • <code>Monetary</code> — panier total (BRL)<br>
-                        • <code>Frequency</code> — nb de commandes<br>
-                        • <code>avg_review_score</code> — note (1–5)<br>
-                        • <code>avg_freight_ratio</code> — fret/panier<br>
-                        • <code>avg_delivery_delay</code> — délai (jours)<br>
-                        • <code>avg_installments</code> — nb versements
+                        • <code>Recency</code> : jours depuis dernier achat<br>
+                        • <code>Monetary</code> : panier total (BRL)<br>
+                        • <code>Frequency</code> : nb de commandes<br>
+                        • <code>avg_review_score</code> : note (1-5)<br>
+                        • <code>avg_freight_ratio</code> : fret/panier<br>
+                        • <code>avg_delivery_delay</code> : délai (jours)<br>
+                        • <code>avg_installments</code> : nb versements
                     </div>
                     <div>
                         <strong>Optionnelles</strong><br>
-                        • <code>payment_type</code> —<br>
+                        • <code>payment_type</code> -<br>
                           <em>'credit_card'</em> ou <em>'boleto'</em><br>
-                        • <code>customer_state</code> —<br>
+                        • <code>customer_state</code> -<br>
                           code état brésilien (ex. SP, BA)<br>
-                        • <code>customer_id</code> — identifiant libre
+                        • <code>customer_id</code> : identifiant libre
                     </div>
                     <div>
                         <strong>Remarques</strong><br>
@@ -485,7 +485,7 @@ def render() -> None:
 
     st.markdown(
         f"<p style='color:#6b7280; font-size:0.85rem;'>"
-        f"Fichier chargé — <strong>{len(df_raw):,} clients</strong>, "
+        f"Fichier chargé : <strong>{len(df_raw):,} clients</strong>, "
         f"{df_raw.shape[1]} colonnes.</p>",
         unsafe_allow_html=True,
     )
@@ -534,15 +534,15 @@ def render() -> None:
     _C_PREM = SEGMENT_COLORS[2]
     _C_BUD = SEGMENT_COLORS[0]
 
-    st.success(f"Analyse terminée — {n_total:,} clients traités.")
+    st.success(f"Analyse terminée : {n_total:,} clients traités.")
     st.divider()
 
     # ════════════════════════════════════════════════════════════════════════
-    # BLOC 1 — CE QU'ON A TROUVÉ
+    # BLOC 1 : CE QU'ON A TROUVÉ
     # ════════════════════════════════════════════════════════════════════════
     st.markdown(
         f"<div style='font-size:1.1rem; font-weight:800; color:{OLIST_BLUE};"
-        " margin-bottom:1rem;'>Bloc 1 — Ce qu'on a trouvé</div>",
+        " margin-bottom:1rem;'>Bloc 1 : Ce qu'on a trouvé</div>",
         unsafe_allow_html=True,
     )
 
@@ -552,9 +552,9 @@ def render() -> None:
         <div style="margin-bottom:1.25rem;">
             <div style="display:flex; justify-content:space-between;
                         font-size:0.82rem; font-weight:700; margin-bottom:6px;">
-                <span style="color:{_C_BUD};">Budget — {pct_budget:.0f}%
+                <span style="color:{_C_BUD};">Budget : {pct_budget:.0f}%
                     &nbsp;({n_budget:,} clients)</span>
-                <span style="color:{_C_PREM};">Premium — {pct_premium:.0f}%
+                <span style="color:{_C_PREM};">Premium : {pct_premium:.0f}%
                     &nbsp;({n_premium:,} clients)</span>
             </div>
             <div style="display:flex; height:20px; border-radius:10px;
@@ -650,7 +650,7 @@ def render() -> None:
             f"Vos campagnes ont bien marché. Sur {n_total} nouveaux clients, "
             f"{n_premium} ont dépensé en moyenne <strong>{avg_prem:.0f} BRL</strong> "
             f"et ont payé par carte de crédit. "
-            f"Ces clients-là ont de la valeur — ils ressemblent à vos meilleurs acheteurs actuels. "
+            f"Ces clients-là ont de la valeur : ils ressemblent à vos meilleurs acheteurs actuels. "
             f"Même s'ils sont moins nombreux que les autres, ils rapportent "
             f"<strong>{rev_prem/rev_total*100:.0f}% du revenue total</strong> de cette vague."
         )
@@ -664,19 +664,19 @@ def render() -> None:
             f"C'est bien pour le volume, mais ces clients reviendront moins facilement "
             f"si vous ne leur proposez pas une nouvelle promotion. "
             f"Les {n_premium} clients Premium que vous avez ramenés sont plus précieux "
-            f"— ils rapportent déjà <strong>{rev_prem/rev_total*100:.0f}% du revenue</strong> "
+            f"- ils rapportent déjà <strong>{rev_prem/rev_total*100:.0f}% du revenue</strong> "
             f"à eux seuls."
         )
     else:
         verdict_color = OLIST_BLUE
-        verdict_icon = "—"
+        verdict_icon = "-"
         verdict = (
             f"Vos campagnes ont touché les deux types de clients. "
             f"{n_premium} clients ont un profil Premium (panier moyen <strong>{avg_prem:.0f} BRL</strong>) "
             f"et {n_budget} ont un profil Budget (panier moyen <strong>{avg_bud:.0f} BRL</strong>). "
             f"Les Premium sont moins nombreux mais génèrent "
             f"<strong>{rev_prem/rev_total*100:.0f}% du revenue total</strong>. "
-            f"Le mois prochain, regardez si ce ratio s'améliore — plus de Premium = mieux ciblé."
+            f"Le mois prochain, regardez si ce ratio s'améliore : plus de Premium = mieux ciblé."
         )
 
     st.markdown(
@@ -696,11 +696,11 @@ def render() -> None:
     st.divider()
 
     # ════════════════════════════════════════════════════════════════════════
-    # BLOC 2 — CE QU'ON FAIT MAINTENANT
+    # BLOC 2 : CE QU'ON FAIT MAINTENANT
     # ════════════════════════════════════════════════════════════════════════
     st.markdown(
         f"<div style='font-size:1.1rem; font-weight:800; color:{OLIST_BLUE};"
-        " margin-bottom:1rem;'>Bloc 2 — Ce qu'on fait maintenant</div>",
+        " margin-bottom:1rem;'>Bloc 2 : Ce qu'on fait maintenant</div>",
         unsafe_allow_html=True,
     )
 
@@ -710,13 +710,13 @@ def render() -> None:
         prem_steps = [
             f"Dans les <strong>30 prochains jours</strong>, envoyer un email "
             f"de remerciement aux {n_premium} clients Premium avec une offre "
-            f"de <strong>–10% sur leur prochaine commande</strong>.",
+            f"de <strong>-10% sur leur prochaine commande</strong>.",
             "Leur proposer des produits dans les mêmes catégories que leur premier "
             "achat : beauté haut de gamme, électronique, mode.",
             "Les inviter à rejoindre le <strong>programme fidélité VIP</strong> "
-            "— ces clients ont le bon profil pour devenir des acheteurs réguliers.",
+            "- ces clients ont le bon profil pour devenir des acheteurs réguliers.",
             "Si pas de rachat après 45 jours : relancer une dernière fois avec "
-            "–15% puis arrêter les relances.",
+            "-15% puis arrêter les relances.",
         ]
         steps_html = "".join(
             f"""<div style="display:flex; gap:10px; margin-bottom:10px;">
@@ -748,9 +748,9 @@ def render() -> None:
     with col_act_bud:
         bud_steps = [
             f"Ajouter les {n_budget} clients Budget à la liste "
-            f"<strong>newsletter promo hebdomadaire</strong> — promotions flash, "
+            f"<strong>newsletter promo hebdomadaire</strong> : promotions flash, "
             f"meilleures affaires de la semaine.",
-            "Ne pas investir dans un email personnalisé coûteux — "
+            "Ne pas investir dans un email personnalisé coûteux : "
             "un email promo générique suffit pour ce profil.",
             "Leur proposer des produits à petit prix dans leur catégorie : "
             "beauté entrée de gamme, articles maison, jouets en promotion.",

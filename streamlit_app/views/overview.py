@@ -1,4 +1,4 @@
-"""Overview page — storytelling intro + distribution + comparisons."""
+"""Overview page : storytelling intro + distribution + comparisons."""
 
 from __future__ import annotations
 
@@ -61,7 +61,7 @@ def render() -> None:
         st.error(str(exc))
         return
 
-    # 1. STORYTELLING — Contexte métier (avant tout graphique)
+    # 1. STORYTELLING : Contexte métier (avant tout graphique)
     st.markdown(
         f"""
         <div style="background:linear-gradient(135deg, {OLIST_BLUE} 0%, #0033cc 100%);
@@ -69,7 +69,7 @@ def render() -> None:
                     color:#FFFFFF;">
             <div style="font-size:0.75rem; color:rgba(255,255,255,0.6);
                         text-transform:uppercase; letter-spacing:0.1em;
-                        margin-bottom:6px;">Segmentation Client — Olist Brasil</div>
+                        margin-bottom:6px;">Segmentation Client : Olist Brasil</div>
             <h1 style="color:#FFFFFF; font-size:1.8rem; font-weight:800;
                        margin:0 0 10px 0; line-height:1.2;">
                 Qui sont vos clients,<br>et comment les activer ?
@@ -78,7 +78,7 @@ def render() -> None:
                       max-width:620px; line-height:1.7; margin:0;">
                 Sur 75 937 acheteurs Olist (après nettoyage IQR), <strong>4 profils distincts</strong>
                 ont été identifiés par machine learning (UMAP + KMeans). Ce dashboard transforme
-                ces profils en <strong>stratégies marketing actionnables</strong> — chaque
+                ces profils en <strong>stratégies marketing actionnables</strong> : chaque
                 segment a sa propre logique d'achat, ses leviers et ses risques.
             </p>
             <div style="margin-top:14px; display:flex; gap:12px; flex-wrap:wrap;">
@@ -100,14 +100,14 @@ def render() -> None:
     # 3 messages-clés
     st.markdown(
         "<h3 style='color:#374151; font-size:1rem; font-weight:700;"
-        " margin-bottom:0.75rem;'>Insights Clés — Ce que révèle la segmentation</h3>",
+        " margin-bottom:0.75rem;'>Insights Clés : Ce que révèle la segmentation</h3>",
         unsafe_allow_html=True,
     )
     k1, k2, k3, k4 = st.columns(4, gap="medium")
     with k1:
         _story_card(
             "C2",
-            "24 % — Cible premium à convertir",
+            "24 % : Cible premium à convertir",
             "Les <strong>Acheteurs Premium</strong> (C2) ont commandé il y a ~4 mois avec "
             "un panier de <strong>180 BRL</strong>. Beauté haut de gamme, tech, mode. "
             "Un email de nurturing à J+30 peut doubler leur CLV.",
@@ -116,28 +116,28 @@ def render() -> None:
     with k2:
         _story_card(
             "C3",
-            "23 % — Dormants à fort potentiel",
+            "23 % : Dormants à fort potentiel",
             "Les <strong>Dormants Premium</strong> (C3) ont dépensé ~160 BRL mais sont "
             "inactifs depuis <strong>367 jours</strong>. Électronique, mobilier, bijoux. "
-            "Une offre exclusive –20 % peut les ramener avant la perte définitive.",
+            "Une offre exclusive -20 % peut les ramener avant la perte définitive.",
             color=SEGMENT_COLORS[3],
         )
     with k3:
         _story_card(
             "C0",
-            "28 % — Volume et récurrence à activer",
+            "28 % : Volume et récurrence à activer",
             "Les <strong>Acheteurs Budget</strong> (C0) sont récents (~4 mois) mais économes "
             "(panier ~64 BRL). Beauté, maison, enfants. <strong>Premier groupe de la base</strong> "
-            "— des promotions hebdomadaires augmentent la fréquence d'achat.",
+            "- des promotions hebdomadaires augmentent la fréquence d'achat.",
             color=SEGMENT_COLORS[0],
         )
     with k4:
         _story_card(
             "C1",
-            "25 % — Dormants à relancer prudemment",
+            "25 % : Dormants à relancer prudemment",
             "Les <strong>Dormants Budget</strong> (C1) sont inactifs depuis ~292 jours "
             "et dépensaient peu (~72 BRL). Nordeste et Norte. "
-            "<strong>ROI faible</strong> — un simple email automatisé suffit, sans remise élevée.",
+            "<strong>ROI faible</strong> : un simple email automatisé suffit, sans remise élevée.",
             color=SEGMENT_COLORS[1],
         )
 
@@ -158,7 +158,7 @@ def render() -> None:
         "Répartition de la Base Client</h3>"
         "<p style='color:#6b7280; font-size:0.85rem; margin-bottom:0.75rem;'>"
         "Le camembert montre le <em>poids</em> de chaque segment. "
-        "La heatmap révèle les <em>différences comportementales</em> — "
+        "La heatmap révèle les <em>différences comportementales</em> : "
         "une cellule verte = score élevé, rouge = score faible.</p>",
         unsafe_allow_html=True,
     )
