@@ -26,7 +26,7 @@ def render() -> None:
         f"<h2 style='color:{OLIST_BLUE}; margin-bottom:0.2rem;'>"
         "Comparaison des Algorithmes de Clustering</h2>"
         "<p style='color:#6b7280; margin-bottom:1.25rem;'>"
-        "Benchmark KMeans · BisectingKMeans · UMAP+KMeans sur le dataset Olist (93 358 clients)</p>",
+        "Benchmark KMeans · BisectingKMeans · UMAP+KMeans sur le dataset Olist (75 937 clients livres)</p>",
         unsafe_allow_html=True,
     )
 

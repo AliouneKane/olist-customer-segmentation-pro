@@ -76,7 +76,8 @@ def render() -> None:
             </h1>
             <p style="color:rgba(255,255,255,0.85); font-size:0.95rem;
                       max-width:620px; line-height:1.7; margin:0;">
-                Sur 75 937 acheteurs Olist (après nettoyage IQR), <strong>4 profils distincts</strong>
+                Sur 75 937 acheteurs Olist ayant au moins une commande <strong>livrée</strong>,
+                <strong>4 profils distincts</strong>
                 ont été identifiés par machine learning (UMAP + KMeans). Ce dashboard transforme
                 ces profils en <strong>stratégies marketing actionnables</strong> : chaque
                 segment a sa propre logique d'achat, ses leviers et ses risques.

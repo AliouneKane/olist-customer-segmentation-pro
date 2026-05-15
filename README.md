@@ -1,6 +1,6 @@
 # Olist Customer Segmentation
 
-> **Transformer 93 358 transactions en stratégies marketing actionnables grâce au Machine Learning**
+> **Transformer 75 937 clients livrés en stratégies marketing actionnables grâce au Machine Learning**
 
 ---
 
@@ -22,7 +22,9 @@ Slides de présentation complètes — contexte, méthodologie, résultats et re
 
 ## Le contexte
 
-Olist est la principale marketplace e-commerce du Brésil, connectant des milliers de vendeurs indépendants à des millions d'acheteurs. Avec un dataset de **93 358 clients uniques**, **100 000+ commandes** et **8 millions de lignes de données relationnelles**, Olist dispose d'une mine d'informations comportementales — encore trop peu exploitée par les équipes marketing.
+Olist est la principale marketplace e-commerce du Brésil, connectant des milliers de vendeurs indépendants à des millions d'acheteurs. Avec un dataset de **96 000+ clients uniques**, **100 000+ commandes** et **8 millions de lignes de données relationnelles**, Olist dispose d'une mine d'informations comportementales — encore trop peu exploitée par les équipes marketing.
+
+La segmentation porte sur **75 937 clients** ayant au moins une commande livrée (`order_status = 'delivered'`). Les commandes annulées, en transit ou non livrées sont exclues pour garantir un comportement d'achat observable et complet.
 
 La question centrale : **qui sont réellement les clients Olist, et comment leur parler différemment ?**
 
@@ -95,7 +97,7 @@ olist-customer-segmentation/
 ├── .github/workflows/
 │   ├── ci.yml                     # Tests + black à chaque push
 │   ├── cd.yml                     # Build Docker + deploy Cloud Run (push main)
-│   ├── retrain.yml                # Réentraînement trimestriel (janv/avr/juil/oct)
+│   ├── retrain.yml                # Réentraînement mensuel (1er de chaque mois — déterminé par simulation ARI)
 │   └── ingest.yml                 # Ingestion + retrain sur ajout dans data/incoming/
 │
 ├── data/
@@ -159,7 +161,7 @@ Neon PostgreSQL (cloud) ←──── ingest_new_data.py
          ↓
 Feature Engineering (RFM + logistique + satisfaction + géo)
          ↓
-IQR filter → log10 → StandardScaler → UMAP(n_neighbors=750)
+Filtre commandes livrées (75 937 clients) → log10 → StandardScaler → UMAP(n_neighbors=750)
          ↓
 KMeans k-search (k=3..8) → meilleur silhouette
          ↓
@@ -313,9 +315,9 @@ Ouvrir et exécuter les notebooks **dans cet ordre** :
 | 1 | `01_eda.ipynb` | Analyse exploratoire — qualité, distributions, cohortes | ~5 min |
 | 2 | `02_preprocessing_fe.ipynb` | Feature engineering — 10 features, StandardScaler, export parquets | ~5 min |
 | 3 | `03_clustering.ipynb` | Comparaison 6 algorithmes, sélection KMeans k=4, recommandations produits, profil socio-démo | ~15 min |
-| 4 | `04_simulation.ipynb` | Stabilité temporelle, fréquence de réentraînement | ~5 min |
+| 4 | `04_simulation.ipynb` | Stabilité temporelle — fenêtres glissantes cumulatives sur 4 intervalles (15/30/60/90j), ARI entre modeles consecutifs → recommandation mensuelle (30j, ARI=0.71) | ~10 min |
 
-> **Note :** Le notebook 03 peut prendre plus de temps selon la puissance de la machine (UMAP sur 93k clients).
+> **Note :** Le notebook 03 peut prendre plus de temps selon la puissance de la machine (UMAP sur 75 937 clients).
 
 Les notebooks génèrent automatiquement dans `data/processed/` :
 - `customer_features_raw.parquet`
@@ -395,15 +397,29 @@ docker run -p 8080:8080 --env-file .env olist-segmentation
 
 ## Réentraînement automatique
 
-Le modèle se réentraîne automatiquement **tous les trimestres** (1er janvier, avril, juillet, octobre à 3h UTC) via `.github/workflows/retrain.yml`.
+Le modèle se réentraîne automatiquement **tous les mois** (1er de chaque mois à 3h UTC) via `.github/workflows/retrain.yml`.
 
-**Déclenchement manuel** (depuis GitHub → Actions → "Quarterly Model Retrain" → Run workflow)
+**Pourquoi mensuel ?** La simulation de stabilité temporelle (`notebooks/04_simulation.ipynb`) teste 4 intervalles (15, 30, 60, 90 jours) via l'Adjusted Rand Index (ARI) entre modèles consécutifs. Résultats :
+
+| Intervalle | ARI moyen | Stable ? |
+| ---------- | --------- | -------- |
+| 15 jours | 0.82 | Oui |
+| **30 jours** | **0.71** | **Oui — optimal** |
+| 60 jours | 0.62 | Non |
+| 90 jours | 0.58 | Non |
+
+L'intervalle de 30 jours est le plus long intervalle stable (ARI >= 0.70) — il minimise le coût de réentraînement tout en garantissant la cohérence des segments.
+
+**Déclenchement manuel** (depuis GitHub → Actions → "Monthly Model Retrain" → Run workflow)
 
 **Logique de décision :**
-- Nouveau silhouette ≥ silhouette actuel − 0.005 → artefacts mis à jour sur GCS
+
+- Nouveau silhouette >= silhouette actuel - 0.005 → artefacts mis à jour sur GCS
 - Sinon → modèle actuel conservé, résultat loggé
 
 **Historique des réentraînements :** `data/processed/retrain_log.json`
+
+**Rapport de stabilité :** `data/processed/stability_report.json` (généré par `04_simulation.ipynb`)
 
 ---
 

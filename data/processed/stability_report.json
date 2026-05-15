@@ -1,7 +1,143 @@
 {
-  "generated_at": "2026-04-12T13:30:32.209303",
-  "best_model": "best_clustering_kmeans_k6.pkl",
-  "best_k": 6,
-  "note": "Run notebooks/04_simulation.ipynb for full temporal analysis",
-  "recommendation": "trimestriel"
+  "generated_at": "2026-05-15T22:21:33.441131",
+  "methodology": "rolling_windows_corrected",
+  "description": "Simulation corrigée : approche cumulative multi-intervalles. L'intervalle optimal est déterminé par les données (plus long intervalle avec ARI moyen >= seuil).",
+  "parameters": {
+    "k": 4,
+    "features": [
+      "Log_Recency",
+      "Frequency_flag",
+      "Log_Monetary"
+    ],
+    "intervals_tested": [
+      15,
+      30,
+      60,
+      90
+    ],
+    "ari_threshold": 0.7,
+    "min_customers": 100,
+    "min_common": 30
+  },
+  "simulation_results": {
+    "15": {
+      "interval_days": 15,
+      "n_pairs": 34,
+      "mean_ari": 0.8197,
+      "std_ari": 0.1019,
+      "ari_scores": [
+        0.5702,
+        0.6348,
+        0.65,
+        0.7792,
+        0.7242,
+        0.6803,
+        0.7777,
+        0.6826,
+        0.855,
+        0.8104,
+        0.8152,
+        0.8242,
+        0.8035,
+        0.8343,
+        0.8487,
+        0.8661,
+        0.7528,
+        0.8913,
+        0.9457,
+        0.86,
+        0.5908,
+        0.9172,
+        0.9129,
+        0.8772,
+        0.8625,
+        0.9111,
+        0.8702,
+        0.8518,
+        0.936,
+        0.9597,
+        0.8927,
+        0.9281,
+        0.8934,
+        0.8585
+      ],
+      "stable": true
+    },
+    "30": {
+      "interval_days": 30,
+      "n_pairs": 16,
+      "mean_ari": 0.7146,
+      "std_ari": 0.0989,
+      "ari_scores": [
+        0.5678,
+        0.6377,
+        0.6054,
+        0.6136,
+        0.7393,
+        0.6878,
+        0.6912,
+        0.7432,
+        0.6811,
+        0.8326,
+        0.5556,
+        0.8166,
+        0.7901,
+        0.7443,
+        0.8987,
+        0.829
+      ],
+      "stable": true
+    },
+    "60": {
+      "interval_days": 60,
+      "n_pairs": 7,
+      "mean_ari": 0.615,
+      "std_ari": 0.0578,
+      "ari_scores": [
+        0.5609,
+        0.6234,
+        0.7045,
+        0.6371,
+        0.6093,
+        0.5141,
+        0.6553
+      ],
+      "stable": false
+    },
+    "90": {
+      "interval_days": 90,
+      "n_pairs": 4,
+      "mean_ari": 0.5789,
+      "std_ari": 0.033,
+      "ari_scores": [
+        0.5294,
+        0.6196,
+        0.5938,
+        0.5726
+      ],
+      "stable": false
+    }
+  },
+  "optimal_interval_days": 30,
+  "recommendation": "mensuel",
+  "rationale": "Le plus long intervalle stable est 30j (ARI=0.7146 >= 0.7). Ré-entraîner plus souvent n'apporterait pas de gain mesurable.",
+  "bootstrap": {
+    "n_iterations": 30,
+    "mean_silhouette": 0.3999,
+    "std_silhouette": 0.0048,
+    "cv": 0.012,
+    "ci_95": [
+      0.3902,
+      0.4068
+    ],
+    "signal": "Modèle robuste (CV=0.0120 < 0.05) — ré-entraînement non urgent."
+  },
+  "silhouette_by_cutoff": {
+    "2017-03-14": 0.3847,
+    "2017-06-29": 0.3901,
+    "2017-10-13": 0.3904,
+    "2018-01-28": 0.3924,
+    "2018-05-15": 0.3884,
+    "2018-08-29": 0.4043
+  }
 }

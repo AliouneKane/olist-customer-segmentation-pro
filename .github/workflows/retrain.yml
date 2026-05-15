@@ -1,8 +1,8 @@
-name: Quarterly Model Retrain
+name: Monthly Model Retrain
 
 on:
   schedule:
-    - cron: "0 3 1 1,4,7,10 *" # 1er janvier, avril, juillet, octobre à 3h UTC
+    - cron: "0 3 1 * *" # 1er de chaque mois à 3h UTC (intervalle optimal : 30j, ARI=0.71)
   workflow_dispatch:
     inputs:
       force:
@@ -49,10 +49,11 @@ jobs:
       - name: Summary
         if: always()
         run: |
-          if [ "$exit_code" = "0" ]; then
-            echo "### ✅ Retrain réussi — nouveaux artefacts uploadés sur GCS" >> $GITHUB_STEP_SUMMARY
-          elif [ "$exit_code" = "1" ]; then
-            echo "### ℹ️ Pas de mise à jour — le modèle actuel est toujours le meilleur" >> $GITHUB_STEP_SUMMARY
+          EXIT=$?
+          if [ "$EXIT" = "0" ]; then
+            echo "### Retrain reussi - nouveaux artefacts uploades sur GCS" >> $GITHUB_STEP_SUMMARY
+          elif [ "$EXIT" = "1" ]; then
+            echo "### Pas de mise a jour - le modele actuel est toujours le meilleur" >> $GITHUB_STEP_SUMMARY
           else
-            echo "### ❌ Erreur pendant le réentraînement" >> $GITHUB_STEP_SUMMARY
+            echo "### Erreur pendant le reentrainement" >> $GITHUB_STEP_SUMMARY
           fi
